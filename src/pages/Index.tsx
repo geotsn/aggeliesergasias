@@ -3,7 +3,7 @@ import { JobCard } from "@/components/JobCard";
 import { JobPostForm } from "@/components/JobPostForm";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon, HammerIcon, PaintbrushIcon, WrenchScrewdriverIcon, UtensilsIcon, HardHatIcon, ShieldCheckIcon, GraduationCapIcon } from "lucide-react";
+import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon, HammerIcon, PaintbrushIcon, ToolIcon, UtensilsIcon, HardHatIcon, ShieldCheckIcon, GraduationCapIcon } from "lucide-react";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,12 +16,12 @@ const Index = () => {
     { id: "electrician", icon: ZapIcon, label: "Ηλεκτρολόγος" },
     { id: "carpenter", icon: HammerIcon, label: "Ξυλουργός" },
     { id: "painter", icon: PaintbrushIcon, label: "Ελαιοχρωματιστής" },
-    { id: "mechanic", icon: WrenchScrewdriverIcon, label: "Μηχανικός" },
+    { id: "mechanic", icon: ToolIcon, label: "Μηχανικός" },
     { id: "chef", icon: UtensilsIcon, label: "Μάγειρας" },
     { id: "security", icon: ShieldCheckIcon, label: "Security" },
     { id: "teacher", icon: GraduationCapIcon, label: "Εκπαιδευτικός" },
   ];
-  
+
   // Mock data - will be replaced with real data from kariera.gr
   const mockJobs = [
     {
