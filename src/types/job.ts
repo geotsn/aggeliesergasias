@@ -9,4 +9,7 @@ export interface JobListing {
   type: "free" | "premium";
   postedAt: Date;
   expiresAt: Date;
+  phone: string;
+  email: string;
+  category: "plumber" | "office" | "driver" | "other";
 }

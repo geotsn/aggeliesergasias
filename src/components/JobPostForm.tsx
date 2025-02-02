@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const JobPostForm = () => {
   const { toast } = useToast();
@@ -43,8 +44,33 @@ export const JobPostForm = () => {
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="category">Ειδικότητα</Label>
+        <Select required>
+          <SelectTrigger>
+            <SelectValue placeholder="Επιλέξτε ειδικότητα" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="plumber">Υδραυλικός</SelectItem>
+            <SelectItem value="office">Υπάλληλος Γραφείου</SelectItem>
+            <SelectItem value="driver">Οδηγός</SelectItem>
+            <SelectItem value="other">Άλλο</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="description">Περιγραφή</Label>
         <Textarea id="description" required className="min-h-[150px]" />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="phone">Τηλέφωνο</Label>
+        <Input id="phone" type="tel" required />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" type="email" required />
       </div>
 
       <div className="space-y-2">
