@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { JobCard } from "@/components/JobCard";
 import { JobPostForm } from "@/components/JobPostForm";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon, HammerIcon, PaintbrushIcon, Wrench, UtensilsIcon, HardHatIcon, ShieldCheckIcon, GraduationCapIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,7 +24,7 @@ const Index = () => {
   ];
 
   // Mock data - will be replaced with real data from kariera.gr
-  const mockJobs = [
+  const [mockJobs, setMockJobs] = useState([
     {
       id: "1",
       title: "Senior Software Engineer",
@@ -53,7 +54,19 @@ const Index = () => {
       email: "hr@creative.gr",
       category: "office" as const
     },
-  ];
+  ]);
+
+  // Check and remove expired jobs
+  useEffect(() => {
+    const now = new Date();
+    setMockJobs(prevJobs => prevJobs.filter(job => new Date(job.expiresAt) > now));
+    
+    const checkExpiry = setInterval(() => {
+      setMockJobs(prevJobs => prevJobs.filter(job => new Date(job.expiresAt) > now));
+    }, 60000); // Check every minute
+
+    return () => clearInterval(checkExpiry);
+  }, []);
 
   const filteredJobs = mockJobs.filter(job => 
     (!selectedCategory || job.category === selectedCategory) &&
@@ -65,38 +78,39 @@ const Index = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+      <header className="bg-white shadow-md">
         <div className="container mx-auto py-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl font-bold text-indigo-900 mb-4">
             Αγγελίες Εργασίας
           </h1>
-          <div className="relative mb-4">
-            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div className="relative mb-6">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400 w-5 h-5" />
             <Input
               type="search"
               placeholder="Αναζήτηση αγγελιών..."
-              className="pl-10"
+              className="pl-10 border-indigo-200 focus:border-indigo-400"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2 overflow-x-auto pb-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {categories.map((category) => {
               const Icon = category.icon;
               return (
-                <button
+                <Button
                   key={category.id}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
                   onClick={() => setSelectedCategory(prev => prev === category.id ? null : category.id)}
-                  className={`flex flex-col items-center justify-center p-3 rounded-lg transition-colors ${
+                  className={`flex flex-col items-center justify-center p-4 h-auto gap-2 transition-all ${
                     selectedCategory === category.id
-                      ? "bg-primary text-white"
-                      : "bg-white hover:bg-gray-50"
+                      ? "bg-indigo-600 hover:bg-indigo-700"
+                      : "hover:border-indigo-300"
                   }`}
                 >
-                  <Icon className="w-6 h-6 mb-1" />
+                  <Icon className="w-6 h-6" />
                   <span className="text-sm text-center">{category.label}</span>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -105,9 +119,13 @@ const Index = () => {
 
       <main className="container mx-auto py-8">
         <Tabs defaultValue="listings" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="listings">Αγγελίες</TabsTrigger>
-            <TabsTrigger value="post">Καταχώρηση Αγγελίας</TabsTrigger>
+          <TabsList className="bg-white">
+            <TabsTrigger value="listings" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
+              Αγγελίες
+            </TabsTrigger>
+            <TabsTrigger value="post" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
+              Καταχώρηση Αγγελίας
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="listings" className="space-y-4">
