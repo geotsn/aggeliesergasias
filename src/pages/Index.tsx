@@ -1,14 +1,26 @@
 import { useState } from "react";
 import { JobCard } from "@/components/JobCard";
 import { JobPostForm } from "@/components/JobPostForm";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon } from "lucide-react";
+import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon, HammerIcon, PaintbrushIcon, WrenchScrewdriverIcon, UtensilsIcon, HardHatIcon, ShieldCheckIcon, GraduationCapIcon } from "lucide-react";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  
+  const categories = [
+    { id: "plumber", icon: WrenchIcon, label: "Υδραυλικός" },
+    { id: "office", icon: BuildingIcon, label: "Υπάλληλος Γραφείου" },
+    { id: "driver", icon: CarIcon, label: "Οδηγός" },
+    { id: "electrician", icon: ZapIcon, label: "Ηλεκτρολόγος" },
+    { id: "carpenter", icon: HammerIcon, label: "Ξυλουργός" },
+    { id: "painter", icon: PaintbrushIcon, label: "Ελαιοχρωματιστής" },
+    { id: "mechanic", icon: WrenchScrewdriverIcon, label: "Μηχανικός" },
+    { id: "chef", icon: UtensilsIcon, label: "Μάγειρας" },
+    { id: "security", icon: ShieldCheckIcon, label: "Security" },
+    { id: "teacher", icon: GraduationCapIcon, label: "Εκπαιδευτικός" },
+  ];
   
   // Mock data - will be replaced with real data from kariera.gr
   const mockJobs = [
@@ -69,34 +81,24 @@ const Index = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            <Button
-              variant={selectedCategory === null ? "default" : "outline"}
-              onClick={() => setSelectedCategory(null)}
-            >
-              Όλες οι ειδικότητες
-            </Button>
-            <Button
-              variant={selectedCategory === "plumber" ? "default" : "outline"}
-              onClick={() => setSelectedCategory("plumber")}
-            >
-              <WrenchIcon className="w-4 h-4 mr-2" />
-              Υδραυλικός
-            </Button>
-            <Button
-              variant={selectedCategory === "office" ? "default" : "outline"}
-              onClick={() => setSelectedCategory("office")}
-            >
-              <BuildingIcon className="w-4 h-4 mr-2" />
-              Υπάλληλος Γραφείου
-            </Button>
-            <Button
-              variant={selectedCategory === "driver" ? "default" : "outline"}
-              onClick={() => setSelectedCategory("driver")}
-            >
-              <CarIcon className="w-4 h-4 mr-2" />
-              Οδηγός
-            </Button>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2 overflow-x-auto pb-2">
+            {categories.map((category) => {
+              const Icon = category.icon;
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(prev => prev === category.id ? null : category.id)}
+                  className={`flex flex-col items-center justify-center p-3 rounded-lg transition-colors ${
+                    selectedCategory === category.id
+                      ? "bg-primary text-white"
+                      : "bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon className="w-6 h-6 mb-1" />
+                  <span className="text-sm text-center">{category.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </header>

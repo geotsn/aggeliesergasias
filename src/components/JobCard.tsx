@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, MapPinIcon, BuildingIcon, ShareIcon, SendIcon, PhoneIcon, MailIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { format } from "date-fns";
+import { el } from "date-fns/locale";
 
 interface JobCardProps {
   job: JobListing;
@@ -59,9 +61,12 @@ export const JobCard = ({ job }: JobCardProps) => {
       
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between text-sm text-gray-500">
-          <div className="flex items-center gap-1">
-            <CalendarIcon className="w-4 h-4" />
-            {daysLeft} ημέρες απομένουν
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1">
+              <CalendarIcon className="w-4 h-4" />
+              {format(job.postedAt, "d MMMM yyyy, HH:mm", { locale: el })}
+            </div>
+            <div>{daysLeft} ημέρες απομένουν</div>
           </div>
           {job.salary && <div className="font-semibold text-primary">{job.salary}</div>}
         </div>
@@ -77,12 +82,12 @@ export const JobCard = ({ job }: JobCardProps) => {
           </div>
         </div>
 
-        <div className="flex gap-2 mt-2">
-          <Button onClick={handleShare} variant="outline" className="flex-1">
+        <div className="flex flex-wrap gap-2 mt-2">
+          <Button onClick={handleShare} variant="outline" className="flex-1 min-w-[120px]">
             <ShareIcon className="w-4 h-4 mr-2" />
             Κοινοποίηση
           </Button>
-          <Button onClick={handleSendCV} className="flex-1">
+          <Button onClick={handleSendCV} className="flex-1 min-w-[120px]">
             <SendIcon className="w-4 h-4 mr-2" />
             Αποστολή CV
           </Button>
