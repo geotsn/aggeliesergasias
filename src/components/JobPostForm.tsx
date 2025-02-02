@@ -70,6 +70,11 @@ export const JobPostForm = () => {
             <SelectItem value="chef">Μάγειρας</SelectItem>
             <SelectItem value="security">Security</SelectItem>
             <SelectItem value="teacher">Εκπαιδευτικός</SelectItem>
+            <SelectItem value="medical">Ιατρικό Προσωπικό</SelectItem>
+            <SelectItem value="agriculture">Γεωργία</SelectItem>
+            <SelectItem value="hairdresser">Κομμωτής</SelectItem>
+            <SelectItem value="retail">Λιανική</SelectItem>
+            <SelectItem value="technology">Τεχνολογία</SelectItem>
             <SelectItem value="other">Άλλο</SelectItem>
           </SelectContent>
         </Select>

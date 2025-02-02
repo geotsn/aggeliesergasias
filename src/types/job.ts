@@ -11,5 +11,5 @@ export interface JobListing {
   expiresAt: Date;
   phone: string;
   email: string;
-  category: "plumber" | "office" | "driver" | "electrician" | "carpenter" | "painter" | "mechanic" | "chef" | "waiter" | "cleaner" | "security" | "teacher" | "other";
+  category: "plumber" | "office" | "driver" | "electrician" | "carpenter" | "painter" | "mechanic" | "chef" | "security" | "teacher" | "medical" | "agriculture" | "hairdresser" | "retail" | "technology" | "other";
 }

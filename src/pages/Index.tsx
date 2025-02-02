@@ -3,7 +3,7 @@ import { JobCard } from "@/components/JobCard";
 import { JobPostForm } from "@/components/JobPostForm";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon, HammerIcon, PaintbrushIcon, Wrench, UtensilsIcon, HardHatIcon, ShieldCheckIcon, GraduationCapIcon } from "lucide-react";
+import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon, HammerIcon, PaintbrushIcon, Wrench, UtensilsIcon, ShieldCheckIcon, GraduationCapIcon, HeartPulseIcon, LeafIcon, ScissorsIcon, ShirtIcon, SmartphoneIcon, MoreHorizontalIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
@@ -21,6 +21,12 @@ const Index = () => {
     { id: "chef", icon: UtensilsIcon, label: "Μάγειρας" },
     { id: "security", icon: ShieldCheckIcon, label: "Security" },
     { id: "teacher", icon: GraduationCapIcon, label: "Εκπαιδευτικός" },
+    { id: "medical", icon: HeartPulseIcon, label: "Ιατρικό Προσωπικό" },
+    { id: "agriculture", icon: LeafIcon, label: "Γεωργία" },
+    { id: "hairdresser", icon: ScissorsIcon, label: "Κομμωτής" },
+    { id: "retail", icon: ShirtIcon, label: "Λιανική" },
+    { id: "technology", icon: SmartphoneIcon, label: "Τεχνολογία" },
+    { id: "other", icon: MoreHorizontalIcon, label: "Άλλο" }
   ];
 
   // Mock data - will be replaced with real data from kariera.gr
@@ -94,7 +100,7 @@ const Index = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {categories.map((category) => {
               const Icon = category.icon;
               return (
