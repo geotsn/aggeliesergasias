@@ -34,7 +34,7 @@ const Index = () => {
       postedAt: new Date(),
       expiresAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
     },
-  ] as const;
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
