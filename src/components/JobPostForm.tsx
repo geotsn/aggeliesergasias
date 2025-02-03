@@ -4,48 +4,138 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 export const JobPostForm = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    company: "",
+    location: "",
+    category: "",
+    description: "",
+    phone: "",
+    email: "",
+    salary: "",
+    type: "free"
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSelectChange = (value: string) => {
+    setFormData(prev => ({ ...prev, category: value }));
+  };
+
+  const handleTypeChange = (value: string) => {
+    setFormData(prev => ({ ...prev, type: value }));
+  };
+
+  const handlePremiumSubmit = () => {
+    window.location.href = "https://buy.stripe.com/14k9BR50e3s54vK000";
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Επιτυχής καταχώρηση!",
-      description: "Η αγγελία σας δημοσιεύτηκε επιτυχώς.",
-    });
-    
-    setLoading(false);
+
+    try {
+      if (formData.type === "premium") {
+        handlePremiumSubmit();
+        return;
+      }
+
+      // Calculate expiration date (10 days from now for free listings)
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 10);
+
+      const { error } = await supabase.from("jobs").insert([
+        {
+          ...formData,
+          posted_at: new Date().toISOString(),
+          expires_at: expiresAt.toISOString(),
+          is_active: true,
+          source: "web",
+          url: window.location.origin
+        }
+      ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Επιτυχής καταχώρηση!",
+        description: "Η αγγελία σας δημοσιεύτηκε επιτυχώς.",
+      });
+
+      // Reset form
+      setFormData({
+        title: "",
+        company: "",
+        location: "",
+        category: "",
+        description: "",
+        phone: "",
+        email: "",
+        salary: "",
+        type: "free"
+      });
+
+    } catch (error) {
+      console.error("Error submitting job:", error);
+      toast({
+        title: "Σφάλμα!",
+        description: "Υπήρξε ένα πρόβλημα κατά την καταχώρηση της αγγελίας.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6">
       <div className="space-y-2">
         <Label htmlFor="title">Τίτλος Θέσης</Label>
-        <Input id="title" required />
+        <Input 
+          id="title" 
+          required 
+          value={formData.title}
+          onChange={handleInputChange}
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="company">Εταιρεία</Label>
-        <Input id="company" required />
+        <Input 
+          id="company" 
+          required 
+          value={formData.company}
+          onChange={handleInputChange}
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="location">Τοποθεσία</Label>
-        <Input id="location" required />
+        <Input 
+          id="location" 
+          required 
+          value={formData.location}
+          onChange={handleInputChange}
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="category">Ειδικότητα</Label>
-        <Select required>
+        <Select 
+          required
+          value={formData.category}
+          onValueChange={handleSelectChange}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Επιλέξτε ειδικότητα" />
           </SelectTrigger>
@@ -72,27 +162,53 @@ export const JobPostForm = () => {
 
       <div className="space-y-2">
         <Label htmlFor="description">Περιγραφή</Label>
-        <Textarea id="description" required className="min-h-[150px]" />
+        <Textarea 
+          id="description" 
+          required 
+          className="min-h-[150px]"
+          value={formData.description}
+          onChange={handleInputChange}
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="phone">Τηλέφωνο</Label>
-        <Input id="phone" type="tel" required />
+        <Input 
+          id="phone" 
+          type="tel" 
+          required 
+          value={formData.phone}
+          onChange={handleInputChange}
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" required />
+        <Input 
+          id="email" 
+          type="email" 
+          required 
+          value={formData.email}
+          onChange={handleInputChange}
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="salary">Μισθός (προαιρετικό)</Label>
-        <Input id="salary" />
+        <Input 
+          id="salary"
+          value={formData.salary}
+          onChange={handleInputChange}
+        />
       </div>
 
       <div className="space-y-2">
         <Label>Τύπος Αγγελίας</Label>
-        <RadioGroup defaultValue="free" className="flex gap-4">
+        <RadioGroup 
+          value={formData.type} 
+          onValueChange={handleTypeChange}
+          className="flex gap-4"
+        >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="free" id="free" />
             <Label htmlFor="free">Δωρεάν (10 ημέρες)</Label>
