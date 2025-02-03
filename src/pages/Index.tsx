@@ -100,8 +100,8 @@ const Index = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="overflow-x-auto pb-4">
-            <div className="flex space-x-2 min-w-max">
+          <div className="h-[calc(100vh-300px)] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent">
+            <div className="flex flex-col space-y-2">
               {categories.map((category) => {
                 const Icon = category.icon;
                 return (
@@ -109,14 +109,14 @@ const Index = () => {
                     key={category.id}
                     variant={selectedCategory === category.id ? "default" : "outline"}
                     onClick={() => setSelectedCategory(prev => prev === category.id ? null : category.id)}
-                    className={`flex items-center gap-2 px-3 py-2 min-w-max transition-all ${
+                    className={`flex items-center gap-2 px-3 py-2 w-full transition-all ${
                       selectedCategory === category.id
                         ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-indigo-300"
                         : "hover:bg-indigo-50 hover:text-indigo-600 border-gray-200"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
-                    <span className="text-sm whitespace-nowrap">{category.label}</span>
+                    <span className="text-sm">{category.label}</span>
                   </Button>
                 );
               })}
