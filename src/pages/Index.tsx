@@ -100,25 +100,27 @@ const Index = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {categories.map((category) => {
-              const Icon = category.icon;
-              return (
-                <Button
-                  key={category.id}
-                  variant={selectedCategory === category.id ? "default" : "outline"}
-                  onClick={() => setSelectedCategory(prev => prev === category.id ? null : category.id)}
-                  className={`flex flex-col items-center justify-center p-4 h-auto gap-2 transition-all ${
-                    selectedCategory === category.id
-                      ? "bg-indigo-600 hover:bg-indigo-700"
-                      : "hover:border-indigo-300"
-                  }`}
-                >
-                  <Icon className="w-6 h-6" />
-                  <span className="text-sm text-center">{category.label}</span>
-                </Button>
-              );
-            })}
+          <div className="overflow-x-auto pb-4">
+            <div className="flex space-x-2 min-w-max">
+              {categories.map((category) => {
+                const Icon = category.icon;
+                return (
+                  <Button
+                    key={category.id}
+                    variant={selectedCategory === category.id ? "default" : "outline"}
+                    onClick={() => setSelectedCategory(prev => prev === category.id ? null : category.id)}
+                    className={`flex items-center gap-2 px-3 py-2 min-w-max transition-all ${
+                      selectedCategory === category.id
+                        ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-indigo-300"
+                        : "hover:bg-indigo-50 hover:text-indigo-600 border-gray-200"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm whitespace-nowrap">{category.label}</span>
+                  </Button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </header>
