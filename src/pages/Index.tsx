@@ -3,7 +3,7 @@ import { JobCard } from "@/components/JobCard";
 import { JobPostForm } from "@/components/JobPostForm";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon, HammerIcon, PaintbrushIcon, Wrench, UtensilsIcon, ShieldCheckIcon, GraduationCapIcon, HeartPulseIcon, LeafIcon, ScissorsIcon, ShirtIcon, SmartphoneIcon, MoreHorizontalIcon } from "lucide-react";
+import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon, HammerIcon, PaintbrushIcon, Wrench, UtensilsIcon, ShieldCheckIcon, GraduationCapIcon, HeartPulseIcon, LeafIcon, ScissorsIcon, ShirtIcon, SmartphoneIcon, MoreHorizontalIcon, BriefcaseIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
@@ -11,6 +11,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   const categories = [
+    { id: "all", icon: BriefcaseIcon, label: "Όλες οι Αγγελίες" },
     { id: "plumber", icon: WrenchIcon, label: "Υδραυλικός" },
     { id: "office", icon: BuildingIcon, label: "Υπάλληλος Γραφείου" },
     { id: "driver", icon: CarIcon, label: "Οδηγός" },
@@ -29,43 +30,23 @@ const Index = () => {
     { id: "other", icon: MoreHorizontalIcon, label: "Άλλο" }
   ];
 
-  // Mock data - will be replaced with real data from kariera.gr
-  const [mockJobs, setMockJobs] = useState([
-    {
-      id: "1",
-      title: "Senior Software Engineer",
-      company: "Tech Corp",
-      location: "Αθήνα",
-      description: "We are looking for a senior software engineer...",
-      requirements: ["5+ years experience", "React", "Node.js"],
-      salary: "€3000 - €4000",
-      type: "premium" as const,
-      postedAt: new Date(),
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      phone: "+30 210 1234567",
-      email: "jobs@techcorp.com",
-      category: "office" as const
-    },
-    {
-      id: "2",
-      title: "Marketing Manager",
-      company: "Creative Agency",
-      location: "Θεσσαλονίκη",
-      description: "Join our creative team as a marketing manager...",
-      requirements: ["3+ years experience", "Digital Marketing"],
-      type: "free" as const,
-      postedAt: new Date(),
-      expiresAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-      phone: "+30 2310 765432",
-      email: "hr@creative.gr",
-      category: "office" as const
-    },
-  ]);
+  // Empty initial jobs array - will be populated from backend later
+  const [mockJobs, setMockJobs] = useState([]);
 
   // Check and remove expired jobs
   useEffect(() => {
     const now = new Date();
-    setMockJobs(prevJobs => prevJobs.filter(job => new Date(job.expiresAt) > now));
+    setMockJobs(prevJobs => {
+      // Sort jobs: premium first, then by date
+      return prevJobs
+        .filter(job => new Date(job.expiresAt) > now)
+        .sort((a, b) => {
+          if (a.type !== b.type) {
+            return a.type === "premium" ? -1 : 1;
+          }
+          return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
+        });
+    });
     
     const checkExpiry = setInterval(() => {
       setMockJobs(prevJobs => prevJobs.filter(job => new Date(job.expiresAt) > now));
@@ -75,7 +56,7 @@ const Index = () => {
   }, []);
 
   const filteredJobs = mockJobs.filter(job => 
-    (!selectedCategory || job.category === selectedCategory) &&
+    (selectedCategory === "all" || !selectedCategory || job.category === selectedCategory) &&
     (!searchTerm || 
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||

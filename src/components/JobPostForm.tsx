@@ -6,23 +6,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import ReCAPTCHA from "react-google-recaptcha";
 
 export const JobPostForm = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [captchaValue, setCaptchaValue] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!captchaValue) {
-      toast({
-        title: "Σφάλμα",
-        description: "Παρακαλώ επιβεβαιώστε ότι δεν είστε ρομπότ",
-        variant: "destructive",
-      });
-      return;
-    }
     setLoading(true);
     
     // Simulate form submission
@@ -105,23 +95,16 @@ export const JobPostForm = () => {
         <RadioGroup defaultValue="free" className="flex gap-4">
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="free" id="free" />
-            <Label htmlFor="free">Δωρεάν (15 ημέρες)</Label>
+            <Label htmlFor="free">Δωρεάν (10 ημέρες)</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="premium" id="premium" />
-            <Label htmlFor="premium">Premium (30 ημέρες)</Label>
+            <Label htmlFor="premium">Premium (30 ημέρες - €3.99)</Label>
           </div>
         </RadioGroup>
       </div>
 
-      <div className="flex justify-center my-4">
-        <ReCAPTCHA
-          sitekey="YOUR_RECAPTCHA_SITE_KEY"
-          onChange={(value) => setCaptchaValue(value)}
-        />
-      </div>
-
-      <Button type="submit" className="w-full" disabled={loading || !captchaValue}>
+      <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Υποβολή..." : "Δημοσίευση Αγγελίας"}
       </Button>
     </form>
