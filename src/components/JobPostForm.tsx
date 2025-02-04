@@ -36,7 +36,10 @@ export const JobPostForm = () => {
     setFormData(prev => ({ ...prev, type: value }));
   };
 
-  const handlePremiumSubmit = () => {
+  const handlePremiumPayment = async () => {
+    // Store form data in localStorage before redirecting
+    localStorage.setItem('pendingJobPost', JSON.stringify(formData));
+    // Redirect to Stripe payment page
     window.location.href = "https://buy.stripe.com/14k9BR50e3s54vK000";
   };
 
@@ -46,7 +49,7 @@ export const JobPostForm = () => {
 
     try {
       if (formData.type === "premium") {
-        handlePremiumSubmit();
+        handlePremiumPayment();
         return;
       }
 
@@ -221,7 +224,7 @@ export const JobPostForm = () => {
       </div>
 
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Υποβολή..." : "Δημοσίευση Αγγελίας"}
+        {loading ? "Υποβολή..." : formData.type === "premium" ? "Πληρωμή €3.99" : "Δημοσίευση Αγγελίας"}
       </Button>
     </form>
   );
