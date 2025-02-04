@@ -3,65 +3,55 @@ import { JobCard } from "@/components/JobCard";
 import { JobPostForm } from "@/components/JobPostForm";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon, HammerIcon, PaintbrushIcon, Wrench, UtensilsIcon, ShieldCheckIcon, GraduationCapIcon, HeartPulseIcon, LeafIcon, ScissorsIcon, ShirtIcon, SmartphoneIcon, MoreHorizontalIcon, BriefcaseIcon } from "lucide-react";
+import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useQuery } from "@tanstack/react-query";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   const categories = [
-    { id: "all", icon: BriefcaseIcon, label: "Όλες οι Αγγελίες" },
+    { id: "all", icon: SearchIcon, label: "Όλες οι Αγγελίες" },
     { id: "plumber", icon: WrenchIcon, label: "Υδραυλικός" },
     { id: "office", icon: BuildingIcon, label: "Υπάλληλος Γραφείου" },
     { id: "driver", icon: CarIcon, label: "Οδηγός" },
-    { id: "electrician", icon: ZapIcon, label: "Ηλεκτρολόγος" },
-    { id: "carpenter", icon: HammerIcon, label: "Ξυλουργός" },
-    { id: "painter", icon: PaintbrushIcon, label: "Ελαιοχρωματιστής" },
-    { id: "mechanic", icon: Wrench, label: "Μηχανικός" },
-    { id: "chef", icon: UtensilsIcon, label: "Μάγειρας" },
-    { id: "security", icon: ShieldCheckIcon, label: "Security" },
-    { id: "teacher", icon: GraduationCapIcon, label: "Εκπαιδευτικός" },
-    { id: "medical", icon: HeartPulseIcon, label: "Ιατρικό Προσωπικό" },
-    { id: "agriculture", icon: LeafIcon, label: "Γεωργία" },
-    { id: "hairdresser", icon: ScissorsIcon, label: "Κομμωτής" },
-    { id: "retail", icon: ShirtIcon, label: "Λιανική" },
-    { id: "technology", icon: SmartphoneIcon, label: "Τεχνολογία" },
-    { id: "other", icon: MoreHorizontalIcon, label: "Άλλο" }
+    { id: "electrician", icon: ZapIcon, label: "Ηλεκτρολόγος" }
   ];
 
-  // Empty initial jobs array - will be populated from backend later
-  const [mockJobs, setMockJobs] = useState([]);
+  const fetchJobs = async () => {
+    let query = supabase
+      .from("jobs")
+      .select("*")
+      .eq("is_active", true)
+      .order("posted_at", { ascending: false });
 
-  // Check and remove expired jobs
-  useEffect(() => {
-    const now = new Date();
-    setMockJobs(prevJobs => {
-      // Sort jobs: premium first, then by date
-      return prevJobs
-        .filter(job => new Date(job.expiresAt) > now)
-        .sort((a, b) => {
-          if (a.type !== b.type) {
-            return a.type === "premium" ? -1 : 1;
-          }
-          return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
-        });
-    });
+    if (selectedCategory && selectedCategory !== "all") {
+      query = query.eq("category", selectedCategory);
+    }
+
+    const { data, error } = await query;
     
-    const checkExpiry = setInterval(() => {
-      setMockJobs(prevJobs => prevJobs.filter(job => new Date(job.expiresAt) > now));
-    }, 60000); // Check every minute
+    if (error) {
+      console.error("Error fetching jobs:", error);
+      throw error;
+    }
+    
+    return data;
+  };
 
-    return () => clearInterval(checkExpiry);
-  }, []);
+  const { data: jobs = [], isLoading } = useQuery({
+    queryKey: ["jobs", selectedCategory],
+    queryFn: fetchJobs
+  });
 
-  const filteredJobs = mockJobs.filter(job => 
-    (selectedCategory === "all" || !selectedCategory || job.category === selectedCategory) &&
-    (!searchTerm || 
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+  const filteredJobs = jobs.filter(job => 
+    !searchTerm || 
+    job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    job.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -81,7 +71,7 @@ const Index = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="h-[calc(100vh-300px)] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent">
+          <ScrollArea className="h-[200px] w-full rounded-md border border-indigo-100 p-4">
             <div className="flex flex-col space-y-2">
               {categories.map((category) => {
                 const Icon = category.icon;
@@ -102,7 +92,7 @@ const Index = () => {
                 );
               })}
             </div>
-          </div>
+          </ScrollArea>
         </div>
       </header>
 
@@ -118,9 +108,17 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="listings" className="space-y-4">
-            {filteredJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
+            {isLoading ? (
+              <div className="text-center py-8">Φόρτωση αγγελιών...</div>
+            ) : filteredJobs.length > 0 ? (
+              filteredJobs.map((job) => (
+                <JobCard key={job.id} job={job} />
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                Δεν βρέθηκαν αγγελίες με τα επιλεγμένα κριτήρια
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="post">
