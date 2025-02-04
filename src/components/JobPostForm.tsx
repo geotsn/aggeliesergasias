@@ -37,10 +37,25 @@ export const JobPostForm = () => {
   };
 
   const handlePremiumPayment = async () => {
-    // Store form data in localStorage before redirecting
     localStorage.setItem('pendingJobPost', JSON.stringify(formData));
-    // Redirect to Stripe payment page
     window.location.href = "https://buy.stripe.com/14k9BR50e3s54vK000";
+  };
+
+  const validateForm = () => {
+    const requiredFields = ['title', 'company', 'location', 'category', 'description', 'phone', 'email'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      throw new Error(`Παρακαλώ συμπληρώστε τα υποχρεωτικά πεδία: ${missingFields.join(', ')}`);
+    }
+
+    if (formData.email && !formData.email.includes('@')) {
+      throw new Error('Παρακαλώ εισάγετε ένα έγκυρο email');
+    }
+
+    if (formData.phone && !/^\d{10}$/.test(formData.phone)) {
+      throw new Error('Παρακαλώ εισάγετε ένα έγκυρο τηλέφωνο (10 ψηφία)');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -48,6 +63,9 @@ export const JobPostForm = () => {
     setLoading(true);
 
     try {
+      // Validate form before submission
+      validateForm();
+
       if (formData.type === "premium") {
         handlePremiumPayment();
         return;
@@ -70,7 +88,7 @@ export const JobPostForm = () => {
 
       if (error) {
         console.error("Supabase error:", error);
-        throw error;
+        throw new Error(error.message || 'Υπήρξε ένα πρόβλημα με την καταχώρηση της αγγελίας');
       }
 
       toast({
@@ -95,7 +113,7 @@ export const JobPostForm = () => {
       console.error("Error submitting job:", error);
       toast({
         title: "Σφάλμα!",
-        description: "Υπήρξε ένα πρόβλημα κατά την καταχώρηση της αγγελίας.",
+        description: error instanceof Error ? error.message : "Υπήρξε ένα πρόβλημα κατά την καταχώρηση της αγγελίας.",
         variant: "destructive"
       });
     } finally {
