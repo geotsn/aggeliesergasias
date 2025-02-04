@@ -1,15 +1,21 @@
 export interface JobListing {
   id: string;
   title: string;
+  title_en?: string;
   company: string;
   location: string;
-  description: string;
-  requirements: string[];
-  salary?: string;
   type: "free" | "premium";
-  postedAt: Date;
-  expiresAt: Date;
-  phone: string;
-  email: string;
-  category: "plumber" | "office" | "driver" | "electrician" | "carpenter" | "painter" | "mechanic" | "chef" | "security" | "teacher" | "medical" | "agriculture" | "hairdresser" | "retail" | "technology" | "other";
+  description: string;
+  description_en?: string;
+  salary?: string;
+  posted_at: string;
+  source: string;
+  url: string;
+  email?: string;
+  phone?: string;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  category?: string;
+  expires_at?: string;
 }

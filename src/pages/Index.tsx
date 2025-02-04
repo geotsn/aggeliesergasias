@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { JobCard } from "@/components/JobCard";
 import { JobPostForm } from "@/components/JobPostForm";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
+import { JobListing } from "@/types/job";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,8 +18,7 @@ const Index = () => {
     { id: "all", icon: SearchIcon, label: "Όλες οι Αγγελίες" },
     { id: "plumber", icon: WrenchIcon, label: "Υδραυλικός" },
     { id: "office", icon: BuildingIcon, label: "Υπάλληλος Γραφείου" },
-    { id: "driver", icon: CarIcon, label: "Οδηγός" },
-    { id: "electrician", icon: ZapIcon, label: "Ηλεκτρολόγος" }
+    { id: "driver", icon: CarIcon, label: "Οδηγός" }
   ];
 
   const fetchJobs = async () => {
@@ -39,7 +39,7 @@ const Index = () => {
       throw error;
     }
     
-    return data;
+    return data as JobListing[];
   };
 
   const { data: jobs = [], isLoading } = useQuery({

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, MapPinIcon, BuildingIcon, ShareIcon, SendIcon, PhoneIcon, MailIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { el } from "date-fns/locale";
 import {
   DropdownMenu,
@@ -19,9 +19,13 @@ interface JobCardProps {
 
 export const JobCard = ({ job }: JobCardProps) => {
   const { toast } = useToast();
-  const daysLeft = Math.ceil(
-    (new Date(job.expiresAt).getTime() - new Date().getTime()) / (1000 * 3600 * 24)
-  );
+  
+  const expirationDate = job.expires_at ? new Date(job.expires_at) : null;
+  const postedDate = job.posted_at ? new Date(job.posted_at) : new Date();
+  
+  const daysLeft = expirationDate 
+    ? Math.ceil((expirationDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24))
+    : 30; // Default to 30 days if no expiration date
 
   const handleShare = async () => {
     try {
@@ -39,6 +43,15 @@ export const JobCard = ({ job }: JobCardProps) => {
   };
 
   const handleSendCV = (emailClient: string) => {
+    if (!job.email) {
+      toast({
+        title: "Σφάλμα",
+        description: "Δεν υπάρχει διαθέσιμο email για αυτή την αγγελία",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const subject = encodeURIComponent(`Application for ${job.title} position`);
     const body = encodeURIComponent(`Dear ${job.company},\n\nI am interested in the ${job.title} position.\n\nBest regards`);
     
@@ -80,22 +93,28 @@ export const JobCard = ({ job }: JobCardProps) => {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1">
               <CalendarIcon className="w-4 h-4 text-indigo-400" />
-              {format(job.postedAt, "d MMMM yyyy, HH:mm", { locale: el })}
+              {isValid(postedDate) ? format(postedDate, "d MMMM yyyy, HH:mm", { locale: el }) : 'Μη διαθέσιμη ημερομηνία'}
             </div>
-            <div className="text-indigo-600 font-medium">{daysLeft} ημέρες απομένουν</div>
+            <div className="text-indigo-600 font-medium">
+              {daysLeft > 0 ? `${daysLeft} ημέρες απομένουν` : 'Έληξε'}
+            </div>
           </div>
           {job.salary && <div className="font-semibold text-indigo-600">{job.salary}</div>}
         </div>
 
         <div className="flex flex-col gap-2 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            <PhoneIcon className="w-4 h-4 text-indigo-400" />
-            {job.phone}
-          </div>
-          <div className="flex items-center gap-2">
-            <MailIcon className="w-4 h-4 text-indigo-400" />
-            {job.email}
-          </div>
+          {job.phone && (
+            <div className="flex items-center gap-2">
+              <PhoneIcon className="w-4 h-4 text-indigo-400" />
+              {job.phone}
+            </div>
+          )}
+          {job.email && (
+            <div className="flex items-center gap-2">
+              <MailIcon className="w-4 h-4 text-indigo-400" />
+              {job.email}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2 mt-2">
