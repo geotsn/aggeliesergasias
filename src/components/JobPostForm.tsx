@@ -68,7 +68,10 @@ export const JobPostForm = () => {
         }
       ]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
       toast({
         title: "Επιτυχής καταχώρηση!",
