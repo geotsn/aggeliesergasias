@@ -17,6 +17,7 @@ export type Database = {
           description: string
           description_en: string | null
           email: string | null
+          expires_at: string | null
           id: string
           is_active: boolean | null
           location: string
@@ -37,6 +38,7 @@ export type Database = {
           description: string
           description_en?: string | null
           email?: string | null
+          expires_at?: string | null
           id?: string
           is_active?: boolean | null
           location: string
@@ -57,6 +59,7 @@ export type Database = {
           description?: string
           description_en?: string | null
           email?: string | null
+          expires_at?: string | null
           id?: string
           is_active?: boolean | null
           location?: string

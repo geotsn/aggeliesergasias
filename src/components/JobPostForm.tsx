@@ -71,11 +71,11 @@ export const JobPostForm = () => {
         return;
       }
 
-      // Calculate expiration date (10 days from now for free listings)
+      // Calculate expiration date (10 days from now for free listings, 30 for premium)
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 10);
+      expiresAt.setDate(expiresAt.getDate() + (formData.type === 'premium' ? 30 : 10));
 
-      const { error } = await supabase.from("jobs").insert([
+      const { data, error } = await supabase.from("jobs").insert([
         {
           ...formData,
           posted_at: new Date().toISOString(),
@@ -84,7 +84,7 @@ export const JobPostForm = () => {
           source: "web",
           url: window.location.origin
         }
-      ]);
+      ]).select();
 
       if (error) {
         console.error("Supabase error:", error);
