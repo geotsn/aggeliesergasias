@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { JobListing } from "@/types/job";
 
@@ -61,7 +60,7 @@ const Index = () => {
           <h1 className="text-3xl font-bold text-indigo-900 mb-4">
             Αγγελίες Εργασίας
           </h1>
-          <div className="relative mb-6">
+          <div className="relative mb-4">
             <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400 w-5 h-5" />
             <Input
               type="search"
@@ -71,7 +70,7 @@ const Index = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-4 bg-white rounded-lg border border-indigo-100">
+          <div className="flex flex-wrap gap-2 p-3 bg-white rounded-lg border border-indigo-100">
             {categories.map((category) => {
               const Icon = category.icon;
               return (
@@ -79,13 +78,13 @@ const Index = () => {
                   key={category.id}
                   variant={selectedCategory === category.id ? "default" : "outline"}
                   onClick={() => setSelectedCategory(prev => prev === category.id ? null : category.id)}
-                  className={`flex items-center gap-2 px-3 py-2 w-full transition-all ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 min-w-[120px] max-w-[150px] transition-all ${
                     selectedCategory === category.id
                       ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-indigo-300"
                       : "hover:bg-indigo-50 hover:text-indigo-600 border-gray-200"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4 flex-shrink-0" />
                   <span className="text-sm truncate">{category.label}</span>
                 </Button>
               );
