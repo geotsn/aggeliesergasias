@@ -3,7 +3,22 @@ import { JobCard } from "@/components/JobCard";
 import { JobPostForm } from "@/components/JobPostForm";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SearchIcon, WrenchIcon, BuildingIcon, CarIcon, ZapIcon } from "lucide-react";
+import { 
+  SearchIcon, 
+  WrenchIcon, 
+  BuildingIcon, 
+  CarIcon, 
+  ChefHatIcon,
+  HeartPulseIcon,
+  GraduationCapIcon,
+  HardHatIcon,
+  ShoppingBagIcon,
+  UtensilsIcon,
+  HomeIcon,
+  TruckIcon,
+  ScissorsIcon,
+  ShirtIcon
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -17,7 +32,17 @@ const Index = () => {
     { id: "all", icon: SearchIcon, label: "Όλες οι Αγγελίες" },
     { id: "plumber", icon: WrenchIcon, label: "Υδραυλικός" },
     { id: "office", icon: BuildingIcon, label: "Υπάλληλος Γραφείου" },
-    { id: "driver", icon: CarIcon, label: "Οδηγός" }
+    { id: "driver", icon: CarIcon, label: "Οδηγός" },
+    { id: "chef", icon: ChefHatIcon, label: "Μάγειρας" },
+    { id: "medical", icon: HeartPulseIcon, label: "Ιατρικό Προσωπικό" },
+    { id: "education", icon: GraduationCapIcon, label: "Εκπαίδευση" },
+    { id: "construction", icon: HardHatIcon, label: "Οικοδομικά" },
+    { id: "retail", icon: ShoppingBagIcon, label: "Πωλητής" },
+    { id: "service", icon: UtensilsIcon, label: "Εστίαση" },
+    { id: "cleaning", icon: HomeIcon, label: "Καθαριότητα" },
+    { id: "logistics", icon: TruckIcon, label: "Αποθήκη" },
+    { id: "beauty", icon: ScissorsIcon, label: "Κομμωτική" },
+    { id: "textile", icon: ShirtIcon, label: "Ραπτική" }
   ];
 
   const fetchJobs = async () => {
