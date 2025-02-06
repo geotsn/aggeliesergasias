@@ -24,26 +24,27 @@ import { useQuery } from "@tanstack/react-query";
 import { JobListing } from "@/types/job";
 import { JobCard } from "@/components/JobCard";
 import { Helmet } from "react-helmet";
+import { Card } from "@/components/ui/card";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   const categories = [
-    { id: "all", icon: SearchIcon, label: "Όλες οι Αγγελίες" },
-    { id: "plumber", icon: WrenchIcon, label: "Υδραυλικός" },
-    { id: "office", icon: BuildingIcon, label: "Υπάλληλος Γραφείου" },
-    { id: "driver", icon: CarIcon, label: "Οδηγός" },
-    { id: "chef", icon: ChefHatIcon, label: "Μάγειρας" },
-    { id: "medical", icon: HeartPulseIcon, label: "Ιατρικό Προσωπικό" },
-    { id: "education", icon: GraduationCapIcon, label: "Εκπαίδευση" },
-    { id: "construction", icon: HardHatIcon, label: "Οικοδομικά" },
-    { id: "retail", icon: ShoppingBagIcon, label: "Πωλητής" },
-    { id: "service", icon: UtensilsIcon, label: "Εστίαση" },
-    { id: "cleaning", icon: HomeIcon, label: "Καθαριότητα" },
-    { id: "logistics", icon: TruckIcon, label: "Αποθήκη" },
-    { id: "beauty", icon: ScissorsIcon, label: "Κομμωτική" },
-    { id: "textile", icon: ShirtIcon, label: "Ραπτική" }
+    { id: "all", icon: SearchIcon, label: "Όλες οι Αγγελίες", description: "Δείτε όλες τις διαθέσιμες θέσεις εργασίας" },
+    { id: "plumber", icon: WrenchIcon, label: "Υδραυλικός", description: "Θέσεις για υδραυλικούς" },
+    { id: "office", icon: BuildingIcon, label: "Υπάλληλος Γραφείου", description: "Διοικητικές θέσεις εργασίας" },
+    { id: "driver", icon: CarIcon, label: "Οδηγός", description: "Θέσεις για επαγγελματίες οδηγούς" },
+    { id: "chef", icon: ChefHatIcon, label: "Μάγειρας", description: "Θέσεις στην μαγειρική" },
+    { id: "medical", icon: HeartPulseIcon, label: "Ιατρικό Προσωπικό", description: "Θέσεις στον ιατρικό τομέα" },
+    { id: "education", icon: GraduationCapIcon, label: "Εκπαίδευση", description: "Εκπαιδευτικές θέσεις" },
+    { id: "construction", icon: HardHatIcon, label: "Οικοδομικά", description: "Θέσεις στις κατασκευές" },
+    { id: "retail", icon: ShoppingBagIcon, label: "Πωλητής", description: "Θέσεις στις πωλήσεις" },
+    { id: "service", icon: UtensilsIcon, label: "Εστίαση", description: "Θέσεις στην εστίαση" },
+    { id: "cleaning", icon: HomeIcon, label: "Καθαριότητα", description: "Θέσεις καθαριότητας" },
+    { id: "logistics", icon: TruckIcon, label: "Αποθήκη", description: "Θέσεις σε αποθήκες" },
+    { id: "beauty", icon: ScissorsIcon, label: "Κομμωτική", description: "Θέσεις στην κομμωτική" },
+    { id: "textile", icon: ShirtIcon, label: "Ραπτική", description: "Θέσεις στην ραπτική" }
   ];
 
   const fetchJobs = async () => {
@@ -109,7 +110,7 @@ const Index = () => {
             <h1 className="text-3xl font-bold text-indigo-900 mb-4">
               Αγγελίες Εργασίας
             </h1>
-            <div className="relative mb-4">
+            <div className="relative mb-6">
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400 w-5 h-5" />
               <Input
                 type="search"
@@ -120,25 +121,32 @@ const Index = () => {
                 aria-label="Αναζήτηση αγγελιών"
               />
             </div>
-            <nav aria-label="Κατηγορίες εργασίας" className="flex flex-wrap gap-2 p-3 bg-white rounded-lg border border-indigo-100">
+            <nav aria-label="Κατηγορίες εργασίας" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {categories.map((category) => {
                 const Icon = category.icon;
+                const isSelected = selectedCategory === category.id;
                 return (
-                  <Button
+                  <Card
                     key={category.id}
-                    variant={selectedCategory === category.id ? "default" : "outline"}
-                    onClick={() => setSelectedCategory(prev => prev === category.id ? null : category.id)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 min-w-[120px] max-w-[150px] transition-all ${
-                      selectedCategory === category.id
-                        ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-indigo-300"
-                        : "hover:bg-indigo-50 hover:text-indigo-600 border-gray-200"
+                    className={`cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+                      isSelected 
+                        ? 'bg-indigo-50 border-indigo-300 shadow-lg' 
+                        : 'hover:shadow-md'
                     }`}
-                    aria-pressed={selectedCategory === category.id}
-                    aria-label={`Φίλτρο για ${category.label}`}
+                    onClick={() => setSelectedCategory(prev => prev === category.id ? null : category.id)}
                   >
-                    <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                    <span className="text-sm truncate">{category.label}</span>
-                  </Button>
+                    <div className={`p-4 flex flex-col items-center text-center gap-2 ${
+                      isSelected ? 'text-indigo-700' : 'text-gray-700'
+                    }`}>
+                      <Icon className={`w-8 h-8 ${
+                        isSelected ? 'text-indigo-600' : 'text-gray-500'
+                      }`} />
+                      <h3 className="font-medium text-sm">{category.label}</h3>
+                      <p className="text-xs text-gray-500 hidden md:block">
+                        {category.description}
+                      </p>
+                    </div>
+                  </Card>
                 );
               })}
             </nav>
