@@ -79,7 +79,6 @@ const Index = () => {
     job.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Add structured data for Google
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
@@ -91,11 +90,14 @@ const Index = () => {
     }
   };
 
+  const pageTitle = `Job Sparkle Hub - Αγγελίες Εργασίας | ${selectedCategory !== 'all' && selectedCategory ? categories.find(c => c.id === selectedCategory)?.label : 'Όλες οι Θέσεις'}`;
+  const pageDescription = `Αναζητήστε θέσεις εργασίας στην κατηγορία ${selectedCategory !== 'all' && selectedCategory ? categories.find(c => c.id === selectedCategory)?.label : 'όλες τις ειδικότητες'}. ${filteredJobs.length} διαθέσιμες θέσεις εργασίας.`;
+
   return (
     <>
       <Helmet>
-        <title>Job Sparkle Hub - Αγγελίες Εργασίας | {selectedCategory !== 'all' ? categories.find(c => c.id === selectedCategory)?.label : 'Όλες οι Θέσεις'}</title>
-        <meta name="description" content={`Αναζητήστε θέσεις εργασίας στην κατηγορία ${selectedCategory !== 'all' ? categories.find(c => c.id === selectedCategory)?.label : 'όλες τις ειδικότητες'}. ${filteredJobs.length} διαθέσιμες θέσεις εργασίας.`} />
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
         <script type="application/ld+json">
           {JSON.stringify(structuredData)}
         </script>
