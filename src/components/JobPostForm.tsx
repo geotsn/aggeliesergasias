@@ -63,7 +63,6 @@ export const JobPostForm = () => {
     setLoading(true);
 
     try {
-      // Validate form before submission
       validateForm();
 
       if (formData.type === "premium") {
@@ -71,7 +70,6 @@ export const JobPostForm = () => {
         return;
       }
 
-      // Calculate expiration date (10 days from now for free listings, 30 for premium)
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + (formData.type === 'premium' ? 30 : 10));
 
@@ -96,7 +94,6 @@ export const JobPostForm = () => {
         description: "Η αγγελία σας δημοσιεύτηκε επιτυχώς.",
       });
 
-      // Reset form
       setFormData({
         title: "",
         company: "",
@@ -179,6 +176,10 @@ export const JobPostForm = () => {
             <SelectItem value="hairdresser">Κομμωτής</SelectItem>
             <SelectItem value="retail">Λιανική</SelectItem>
             <SelectItem value="technology">Τεχνολογία</SelectItem>
+            <SelectItem value="service">Εστίαση</SelectItem>
+            <SelectItem value="cleaning">Καθαριότητα</SelectItem>
+            <SelectItem value="logistics">Αποθήκη</SelectItem>
+            <SelectItem value="textile">Ραπτική</SelectItem>
             <SelectItem value="other">Άλλο</SelectItem>
           </SelectContent>
         </Select>
