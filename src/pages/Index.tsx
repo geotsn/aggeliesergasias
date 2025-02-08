@@ -4,7 +4,7 @@ import { useState } from "react";
 import { JobPostForm } from "@/components/JobPostForm";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SearchIcon, ChevronDownIcon } from "lucide-react";
+import { SearchIcon, ChevronDownIcon, Facebook, Instagram, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -85,9 +85,36 @@ const Index = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
         <header className="bg-white shadow-md">
           <div className="container mx-auto py-6">
-            <h1 className="text-3xl font-bold text-indigo-900 mb-4">
-              Αγγελίες Εργασίας
-            </h1>
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-3xl font-bold text-indigo-900">
+                Αγγελίες Εργασίας
+              </h1>
+              <div className="flex items-center gap-4">
+                <a 
+                  href="https://www.facebook.com/profile.php?id=61565350984901"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 hover:text-indigo-700 transition-colors"
+                  aria-label="Facebook"
+                >
+                  <Facebook size={24} />
+                </a>
+                <span 
+                  className="text-gray-400 cursor-not-allowed"
+                  title="Coming soon"
+                  aria-label="Instagram (coming soon)"
+                >
+                  <Instagram size={24} />
+                </span>
+                <span 
+                  className="text-gray-400 cursor-not-allowed"
+                  title="Coming soon"
+                  aria-label="TikTok (coming soon)"
+                >
+                  <MessageCircle size={24} />
+                </span>
+              </div>
+            </div>
             <div className="relative mb-6">
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400 w-5 h-5" />
               <Input
