@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { JobPostForm } from "@/components/JobPostForm";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,8 @@ import {
   HomeIcon,
   TruckIcon,
   ScissorsIcon,
-  ShirtIcon
+  ShirtIcon,
+  ChevronDownIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +26,12 @@ import { useQuery } from "@tanstack/react-query";
 import { JobListing } from "@/types/job";
 import { JobCard } from "@/components/JobCard";
 import { Helmet } from "react-helmet";
-import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -91,6 +98,7 @@ const Index = () => {
     }
   };
 
+  const selectedCategoryData = categories.find(c => c.id === selectedCategory) || categories[0];
   const pageTitle = `Job Sparkle Hub - Αγγελίες Εργασίας | ${selectedCategory !== 'all' && selectedCategory ? categories.find(c => c.id === selectedCategory)?.label : 'Όλες οι Θέσεις'}`;
   const pageDescription = `Αναζητήστε θέσεις εργασίας στην κατηγορία ${selectedCategory !== 'all' && selectedCategory ? categories.find(c => c.id === selectedCategory)?.label : 'όλες τις ειδικότητες'}. ${filteredJobs.length} διαθέσιμες θέσεις εργασίας.`;
 
@@ -121,34 +129,38 @@ const Index = () => {
                 aria-label="Αναζήτηση αγγελιών"
               />
             </div>
-            <nav aria-label="Κατηγορίες εργασίας" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {categories.map((category) => {
-                const Icon = category.icon;
-                const isSelected = selectedCategory === category.id;
-                return (
-                  <Card
-                    key={category.id}
-                    className={`cursor-pointer transition-all duration-300 transform hover:scale-105 ${
-                      isSelected 
-                        ? 'bg-indigo-50 border-indigo-300 shadow-lg' 
-                        : 'hover:shadow-md'
-                    }`}
-                    onClick={() => setSelectedCategory(prev => prev === category.id ? null : category.id)}
-                  >
-                    <div className={`p-4 flex flex-col items-center text-center gap-2 ${
-                      isSelected ? 'text-indigo-700' : 'text-gray-700'
-                    }`}>
-                      <Icon className={`w-8 h-8 ${
-                        isSelected ? 'text-indigo-600' : 'text-gray-500'
-                      }`} />
-                      <h3 className="font-medium text-sm">{category.label}</h3>
-                      <p className="text-xs text-gray-500 hidden md:block">
-                        {category.description}
-                      </p>
-                    </div>
-                  </Card>
-                );
-              })}
+            <nav aria-label="Κατηγορίες εργασίας" className="flex justify-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full md:w-auto bg-white">
+                    <span className="flex items-center gap-2">
+                      {React.createElement(selectedCategoryData.icon, { className: "w-5 h-5" })}
+                      {selectedCategoryData.label}
+                      <ChevronDownIcon className="w-4 h-4 ml-2" />
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-full md:w-56 bg-white shadow-lg border border-gray-200">
+                  {categories.map((category) => {
+                    const Icon = category.icon;
+                    return (
+                      <DropdownMenuItem
+                        key={category.id}
+                        className={`flex items-center gap-2 px-4 py-2 cursor-pointer ${
+                          selectedCategory === category.id ? 'bg-indigo-50 text-indigo-600' : ''
+                        }`}
+                        onClick={() => setSelectedCategory(category.id)}
+                      >
+                        <Icon className="w-5 h-5" />
+                        <div>
+                          <div className="font-medium">{category.label}</div>
+                          <div className="text-xs text-gray-500">{category.description}</div>
+                        </div>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </nav>
           </div>
         </header>
