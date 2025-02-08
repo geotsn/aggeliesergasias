@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { categories } from "@/config/categories";
 
 export const JobPostForm = () => {
   const { toast } = useToast();
@@ -73,10 +75,14 @@ export const JobPostForm = () => {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + (formData.type === 'premium' ? 30 : 10));
 
+      // Adjust for GMT+2
+      const postedAt = new Date();
+      postedAt.setHours(postedAt.getHours() + 2);
+
       const { data, error } = await supabase.from("jobs").insert([
         {
           ...formData,
-          posted_at: new Date().toISOString(),
+          posted_at: postedAt.toISOString(),
           expires_at: expiresAt.toISOString(),
           is_active: true,
           source: "web",
@@ -161,26 +167,11 @@ export const JobPostForm = () => {
             <SelectValue placeholder="Επιλέξτε ειδικότητα" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="plumber">Υδραυλικός</SelectItem>
-            <SelectItem value="office">Υπάλληλος Γραφείου</SelectItem>
-            <SelectItem value="driver">Οδηγός</SelectItem>
-            <SelectItem value="electrician">Ηλεκτρολόγος</SelectItem>
-            <SelectItem value="carpenter">Ξυλουργός</SelectItem>
-            <SelectItem value="painter">Ελαιοχρωματιστής</SelectItem>
-            <SelectItem value="mechanic">Μηχανικός</SelectItem>
-            <SelectItem value="chef">Μάγειρας</SelectItem>
-            <SelectItem value="security">Security</SelectItem>
-            <SelectItem value="teacher">Εκπαιδευτικός</SelectItem>
-            <SelectItem value="medical">Ιατρικό Προσωπικό</SelectItem>
-            <SelectItem value="agriculture">Γεωργία</SelectItem>
-            <SelectItem value="hairdresser">Κομμωτής</SelectItem>
-            <SelectItem value="retail">Λιανική</SelectItem>
-            <SelectItem value="technology">Τεχνολογία</SelectItem>
-            <SelectItem value="service">Εστίαση</SelectItem>
-            <SelectItem value="cleaning">Καθαριότητα</SelectItem>
-            <SelectItem value="logistics">Αποθήκη</SelectItem>
-            <SelectItem value="textile">Ραπτική</SelectItem>
-            <SelectItem value="other">Άλλο</SelectItem>
+            {categories.filter(cat => cat.id !== "all").map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -219,11 +210,12 @@ export const JobPostForm = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="salary">Μισθός (προαιρετικό)</Label>
+        <Label htmlFor="salary">Μισθός</Label>
         <Input 
           id="salary"
           value={formData.salary}
           onChange={handleInputChange}
+          placeholder="π.χ. 1000€"
         />
       </div>
 

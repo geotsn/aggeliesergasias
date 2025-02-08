@@ -1,25 +1,10 @@
+
 import React from "react";
 import { useState } from "react";
 import { JobPostForm } from "@/components/JobPostForm";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  SearchIcon, 
-  WrenchIcon, 
-  BuildingIcon, 
-  CarIcon, 
-  ChefHatIcon,
-  HeartPulseIcon,
-  GraduationCapIcon,
-  HardHatIcon,
-  ShoppingBagIcon,
-  UtensilsIcon,
-  HomeIcon,
-  TruckIcon,
-  ScissorsIcon,
-  ShirtIcon,
-  ChevronDownIcon
-} from "lucide-react";
+import { SearchIcon, ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -33,28 +18,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { categories } from "@/config/categories";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
-  const categories = [
-    { id: "all", icon: SearchIcon, label: "Όλες οι Αγγελίες", description: "Δείτε όλες τις διαθέσιμες θέσεις εργασίας" },
-    { id: "plumber", icon: WrenchIcon, label: "Υδραυλικός", description: "Θέσεις για υδραυλικούς" },
-    { id: "office", icon: BuildingIcon, label: "Υπάλληλος Γραφείου", description: "Διοικητικές θέσεις εργασίας" },
-    { id: "driver", icon: CarIcon, label: "Οδηγός", description: "Θέσεις για επαγγελματίες οδηγούς" },
-    { id: "chef", icon: ChefHatIcon, label: "Μάγειρας", description: "Θέσεις στην μαγειρική" },
-    { id: "medical", icon: HeartPulseIcon, label: "Ιατρικό Προσωπικό", description: "Θέσεις στον ιατρικό τομέα" },
-    { id: "education", icon: GraduationCapIcon, label: "Εκπαίδευση", description: "Εκπαιδευτικές θέσεις" },
-    { id: "construction", icon: HardHatIcon, label: "Οικοδομικά", description: "Θέσεις στις κατασκευές" },
-    { id: "retail", icon: ShoppingBagIcon, label: "Πωλητής", description: "Θέσεις στις πωλήσεις" },
-    { id: "service", icon: UtensilsIcon, label: "Εστίαση", description: "Θέσεις στην εστίαση" },
-    { id: "cleaning", icon: HomeIcon, label: "Καθαριότητα", description: "Θέσεις καθαριότητας" },
-    { id: "logistics", icon: TruckIcon, label: "Αποθήκη", description: "Θέσεις σε αποθήκες" },
-    { id: "beauty", icon: ScissorsIcon, label: "Κομμωτική", description: "Θέσεις στην κομμωτική" },
-    { id: "textile", icon: ShirtIcon, label: "Ραπτική", description: "Θέσεις στην ραπτική" }
-  ];
-
   const fetchJobs = async () => {
     let query = supabase
       .from("jobs")

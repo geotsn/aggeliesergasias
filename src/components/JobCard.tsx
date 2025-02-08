@@ -3,7 +3,7 @@ import { JobListing } from "@/types/job";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, MapPinIcon, BuildingIcon, ShareIcon, SendIcon, PhoneIcon, MailIcon } from "lucide-react";
+import { CalendarIcon, MapPinIcon, BuildingIcon, ShareIcon, SendIcon, PhoneIcon, MailIcon, EuroIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { format, isValid } from "date-fns";
 import { el } from "date-fns/locale";
@@ -24,9 +24,12 @@ export const JobCard = ({ job }: JobCardProps) => {
   const expirationDate = job.expires_at ? new Date(job.expires_at) : null;
   const postedDate = job.posted_at ? new Date(job.posted_at) : new Date();
   
+  // Adjust for GMT+2
+  const adjustedPostedDate = new Date(postedDate.getTime() + (2 * 60 * 60 * 1000));
+  
   const daysLeft = expirationDate 
     ? Math.ceil((expirationDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24))
-    : 30; // Default to 30 days if no expiration date
+    : 30;
 
   const handleShare = async () => {
     try {
@@ -88,19 +91,25 @@ export const JobCard = ({ job }: JobCardProps) => {
       </div>
       
       <p className="text-gray-600 mb-4 line-clamp-3">{job.description}</p>
+
+      {job.salary && (
+        <div className="flex items-center gap-2 text-indigo-600 font-medium mb-4">
+          <EuroIcon className="w-4 h-4" />
+          {job.salary}
+        </div>
+      )}
       
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between text-sm text-gray-500">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1">
               <CalendarIcon className="w-4 h-4 text-indigo-400" />
-              {isValid(postedDate) ? format(postedDate, "d MMMM yyyy, HH:mm", { locale: el }) : 'Μη διαθέσιμη ημερομηνία'}
+              {isValid(adjustedPostedDate) ? format(adjustedPostedDate, "d MMMM yyyy, HH:mm", { locale: el }) : 'Μη διαθέσιμη ημερομηνία'}
             </div>
             <div className="text-indigo-600 font-medium">
               {daysLeft > 0 ? `${daysLeft} ημέρες απομένουν` : 'Έληξε'}
             </div>
           </div>
-          {job.salary && <div className="font-semibold text-indigo-600">{job.salary}</div>}
         </div>
 
         <div className="flex flex-col gap-2 text-sm text-gray-600">
