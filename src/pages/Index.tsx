@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useState } from "react";
 import { JobPostForm } from "@/components/JobPostForm";
@@ -33,6 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -141,25 +141,27 @@ const Index = () => {
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-full md:w-56 bg-white shadow-lg border border-gray-200">
-                  {categories.map((category) => {
-                    const Icon = category.icon;
-                    return (
-                      <DropdownMenuItem
-                        key={category.id}
-                        className={`flex items-center gap-2 px-4 py-2 cursor-pointer ${
-                          selectedCategory === category.id ? 'bg-indigo-50 text-indigo-600' : ''
-                        }`}
-                        onClick={() => setSelectedCategory(category.id)}
-                      >
-                        <Icon className="w-5 h-5" />
-                        <div>
-                          <div className="font-medium">{category.label}</div>
-                          <div className="text-xs text-gray-500">{category.description}</div>
-                        </div>
-                      </DropdownMenuItem>
-                    );
-                  })}
+                <DropdownMenuContent className="w-full md:w-[350px] bg-white shadow-lg border border-gray-200">
+                  <ScrollArea className="h-[300px] w-full">
+                    {categories.map((category) => {
+                      const Icon = category.icon;
+                      return (
+                        <DropdownMenuItem
+                          key={category.id}
+                          className={`flex items-center gap-2 px-4 py-2 cursor-pointer ${
+                            selectedCategory === category.id ? 'bg-indigo-50 text-indigo-600' : ''
+                          }`}
+                          onClick={() => setSelectedCategory(category.id)}
+                        >
+                          <Icon className="w-5 h-5" />
+                          <div>
+                            <div className="font-medium">{category.label}</div>
+                            <div className="text-xs text-gray-500">{category.description}</div>
+                          </div>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </ScrollArea>
                 </DropdownMenuContent>
               </DropdownMenu>
             </nav>
