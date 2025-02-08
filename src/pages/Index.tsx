@@ -1,4 +1,5 @@
 
+import React from "react";
 import { useState } from "react";
 import { JobPostForm } from "@/components/JobPostForm";
 import { Input } from "@/components/ui/input";
