@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarIcon, MapPinIcon, BuildingIcon, ShareIcon, SendIcon, PhoneIcon, MailIcon, EuroIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { format, isValid } from "date-fns";
-import { el } from "date-fns/locale";
+import { el, enUS, de, es, zhCN, ru } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
@@ -32,6 +32,24 @@ export const JobCard = ({ job }: JobCardProps) => {
   const daysLeft = expirationDate 
     ? Math.ceil((expirationDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24))
     : 30;
+
+  // Function to get the locale based on current language
+  const getLocale = () => {
+    switch (i18n.language) {
+      case 'en':
+        return enUS;
+      case 'de':
+        return de;
+      case 'es':
+        return es;
+      case 'zh':
+        return zhCN;
+      case 'ru':
+        return ru;
+      default:
+        return el;
+    }
+  };
 
   // Function to get the title in the current language
   const getLocalizedTitle = () => {
@@ -145,7 +163,7 @@ export const JobCard = ({ job }: JobCardProps) => {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1">
               <CalendarIcon className="w-4 h-4 text-indigo-400" />
-              {isValid(adjustedPostedDate) ? format(adjustedPostedDate, "d MMMM yyyy, HH:mm", { locale: el }) : t('date.not.available')}
+              {isValid(adjustedPostedDate) ? format(adjustedPostedDate, "d MMMM yyyy, HH:mm", { locale: getLocale() }) : t('date.not.available')}
             </div>
             <div className="text-indigo-600 font-medium">
               {daysLeft > 0 ? t('days.remaining', { count: daysLeft }) : t('expired')}
@@ -201,3 +219,4 @@ export const JobCard = ({ job }: JobCardProps) => {
     </Card>
   );
 };
+

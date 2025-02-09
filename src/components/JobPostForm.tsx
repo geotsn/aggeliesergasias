@@ -9,9 +9,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { categories } from "@/config/categories";
+import { useTranslation } from "react-i18next";
 
 export const JobPostForm = () => {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -48,11 +50,11 @@ export const JobPostForm = () => {
     const missingFields = requiredFields.filter(field => !formData[field]);
     
     if (missingFields.length > 0) {
-      throw new Error(`Παρακαλώ συμπληρώστε τα υποχρεωτικά πεδία: ${missingFields.join(', ')}`);
+      throw new Error(`${t('error')}: ${missingFields.map(field => t(`${field}.label`)).join(', ')}`);
     }
 
     if (formData.email && !formData.email.includes('@')) {
-      throw new Error('Παρακαλώ εισάγετε ένα έγκυρο email');
+      throw new Error(t('email.not.available'));
     }
 
     if (formData.phone && !/^\d{10}$/.test(formData.phone)) {
@@ -92,7 +94,7 @@ export const JobPostForm = () => {
 
       if (error) {
         console.error("Supabase error:", error);
-        throw new Error(error.message || 'Υπήρξε ένα πρόβλημα με την καταχώρηση της αγγελίας');
+        throw new Error(error.message || t('error'));
       }
 
       toast({
@@ -115,8 +117,8 @@ export const JobPostForm = () => {
     } catch (error) {
       console.error("Error submitting job:", error);
       toast({
-        title: "Σφάλμα!",
-        description: error instanceof Error ? error.message : "Υπήρξε ένα πρόβλημα κατά την καταχώρηση της αγγελίας.",
+        title: t('error'),
+        description: error instanceof Error ? error.message : t('error'),
         variant: "destructive"
       });
     } finally {
@@ -127,7 +129,7 @@ export const JobPostForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6">
       <div className="space-y-2">
-        <Label htmlFor="title">Τίτλος Θέσης</Label>
+        <Label htmlFor="title">{t('title.label')}</Label>
         <Input 
           id="title" 
           required 
@@ -137,7 +139,7 @@ export const JobPostForm = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="company">Εταιρεία</Label>
+        <Label htmlFor="company">{t('company.label')}</Label>
         <Input 
           id="company" 
           required 
@@ -147,7 +149,7 @@ export const JobPostForm = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="location">Τοποθεσία</Label>
+        <Label htmlFor="location">{t('location.label')}</Label>
         <Input 
           id="location" 
           required 
@@ -157,14 +159,14 @@ export const JobPostForm = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="category">Ειδικότητα</Label>
+        <Label htmlFor="category">{t('category.label')}</Label>
         <Select 
           required
           value={formData.category}
           onValueChange={handleSelectChange}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Επιλέξτε ειδικότητα" />
+            <SelectValue placeholder={t('select.specialty')} />
           </SelectTrigger>
           <SelectContent>
             {categories.filter(cat => cat.id !== "all").map((category) => (
@@ -177,7 +179,7 @@ export const JobPostForm = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Περιγραφή</Label>
+        <Label htmlFor="description">{t('description.label')}</Label>
         <Textarea 
           id="description" 
           required 
@@ -188,7 +190,7 @@ export const JobPostForm = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone">Τηλέφωνο</Label>
+        <Label htmlFor="phone">{t('phone.label')}</Label>
         <Input 
           id="phone" 
           type="tel" 
@@ -199,7 +201,7 @@ export const JobPostForm = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t('email.label')}</Label>
         <Input 
           id="email" 
           type="email" 
@@ -210,17 +212,17 @@ export const JobPostForm = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="salary">Μισθός</Label>
+        <Label htmlFor="salary">{t('salary.label')}</Label>
         <Input 
           id="salary"
           value={formData.salary}
           onChange={handleInputChange}
-          placeholder="π.χ. 1000€"
+          placeholder={t('salary.placeholder')}
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Τύπος Αγγελίας</Label>
+        <Label>{t('posting.type')}</Label>
         <RadioGroup 
           value={formData.type} 
           onValueChange={handleTypeChange}
@@ -228,18 +230,19 @@ export const JobPostForm = () => {
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="free" id="free" />
-            <Label htmlFor="free">Δωρεάν (10 ημέρες)</Label>
+            <Label htmlFor="free">{t('free.posting')}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="premium" id="premium" />
-            <Label htmlFor="premium">Premium (30 ημέρες - €3.99)</Label>
+            <Label htmlFor="premium">{t('premium.posting')}</Label>
           </div>
         </RadioGroup>
       </div>
 
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Υποβολή..." : formData.type === "premium" ? "Πληρωμή €3.99" : "Δημοσίευση Αγγελίας"}
+        {loading ? t('submitting') : formData.type === "premium" ? t('pay') : t('publish')}
       </Button>
     </form>
   );
 };
+
