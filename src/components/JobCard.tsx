@@ -21,7 +21,7 @@ interface JobCardProps {
 
 export const JobCard = ({ job }: JobCardProps) => {
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   const expirationDate = job.expires_at ? new Date(job.expires_at) : null;
   const postedDate = job.posted_at ? new Date(job.posted_at) : new Date();
@@ -33,11 +33,15 @@ export const JobCard = ({ job }: JobCardProps) => {
     ? Math.ceil((expirationDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24))
     : 30;
 
+  // Determine which title and description to show based on language
+  const displayTitle = i18n.language === 'en' && job.title_en ? job.title_en : job.title;
+  const displayDescription = i18n.language === 'en' && job.description_en ? job.description_en : job.description;
+
   const handleShare = async () => {
     try {
       await navigator.share({
-        title: job.title,
-        text: `${job.company} is hiring: ${job.title}`,
+        title: displayTitle,
+        text: `${job.company} is hiring: ${displayTitle}`,
         url: window.location.href,
       });
     } catch (err) {
@@ -58,8 +62,8 @@ export const JobCard = ({ job }: JobCardProps) => {
       return;
     }
 
-    const subject = encodeURIComponent(`Application for ${job.title} position`);
-    const body = encodeURIComponent(`Dear ${job.company},\n\nI am interested in the ${job.title} position.\n\nBest regards`);
+    const subject = encodeURIComponent(`Application for ${displayTitle} position`);
+    const body = encodeURIComponent(`Dear ${job.company},\n\nI am interested in the ${displayTitle} position.\n\nBest regards`);
     
     const emailUrls = {
       gmail: `https://mail.google.com/mail/?view=cm&fs=1&to=${job.email}&su=${subject}&body=${body}`,
@@ -75,7 +79,7 @@ export const JobCard = ({ job }: JobCardProps) => {
     <Card className="p-6 hover:shadow-lg transition-shadow animate-fade-in bg-white border-indigo-100">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-xl font-semibold mb-2 text-indigo-900">{job.title}</h3>
+          <h3 className="text-xl font-semibold mb-2 text-indigo-900">{displayTitle}</h3>
           <div className="flex items-center text-gray-600 gap-4">
             <span className="flex items-center gap-1">
               <BuildingIcon className="w-4 h-4 text-indigo-400" />
@@ -92,7 +96,7 @@ export const JobCard = ({ job }: JobCardProps) => {
         </Badge>
       </div>
       
-      <p className="text-gray-600 mb-4 line-clamp-3">{job.description}</p>
+      <p className="text-gray-600 mb-4 line-clamp-3">{displayDescription}</p>
 
       {job.salary && (
         <div className="flex items-center gap-2 text-indigo-600 font-medium mb-4">
