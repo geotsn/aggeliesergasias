@@ -7,6 +7,7 @@ import { CalendarIcon, MapPinIcon, BuildingIcon, ShareIcon, SendIcon, PhoneIcon,
 import { useToast } from "@/components/ui/use-toast";
 import { format, isValid } from "date-fns";
 import { el } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ interface JobCardProps {
 
 export const JobCard = ({ job }: JobCardProps) => {
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const expirationDate = job.expires_at ? new Date(job.expires_at) : null;
   const postedDate = job.posted_at ? new Date(job.posted_at) : new Date();
@@ -107,7 +109,7 @@ export const JobCard = ({ job }: JobCardProps) => {
               {isValid(adjustedPostedDate) ? format(adjustedPostedDate, "d MMMM yyyy, HH:mm", { locale: el }) : 'Μη διαθέσιμη ημερομηνία'}
             </div>
             <div className="text-indigo-600 font-medium">
-              {daysLeft > 0 ? `${daysLeft} ημέρες απομένουν` : 'Έληξε'}
+              {daysLeft > 0 ? t('days.remaining', { count: daysLeft }) : t('expired')}
             </div>
           </div>
         </div>
@@ -130,14 +132,14 @@ export const JobCard = ({ job }: JobCardProps) => {
         <div className="flex flex-wrap gap-2 mt-2">
           <Button onClick={handleShare} variant="outline" className="flex-1 min-w-[120px] border-indigo-200 hover:border-indigo-300">
             <ShareIcon className="w-4 h-4 mr-2" />
-            Κοινοποίηση
+            {t('share')}
           </Button>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="flex-1 min-w-[120px] bg-indigo-600 hover:bg-indigo-700">
                 <SendIcon className="w-4 h-4 mr-2" />
-                Αποστολή CV
+                {t('send.cv')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>

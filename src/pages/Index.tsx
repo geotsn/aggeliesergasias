@@ -11,6 +11,8 @@ import { useQuery } from "@tanstack/react-query";
 import { JobListing } from "@/types/job";
 import { JobCard } from "@/components/JobCard";
 import { Helmet } from "react-helmet";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +25,7 @@ import { categories } from "@/config/categories";
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { t } = useTranslation();
   
   const fetchJobs = async () => {
     let query = supabase
@@ -69,8 +72,8 @@ const Index = () => {
   };
 
   const selectedCategoryData = categories.find(c => c.id === selectedCategory) || categories[0];
-  const pageTitle = `Job Sparkle Hub - Αγγελίες Εργασίας | ${selectedCategory !== 'all' && selectedCategory ? categories.find(c => c.id === selectedCategory)?.label : 'Όλες οι Θέσεις'}`;
-  const pageDescription = `Αναζητήστε θέσεις εργασίας στην κατηγορία ${selectedCategory !== 'all' && selectedCategory ? categories.find(c => c.id === selectedCategory)?.label : 'όλες τις ειδικότητες'}. ${filteredJobs.length} διαθέσιμες θέσεις εργασίας.`;
+  const pageTitle = `Job Sparkle Hub - ${t('jobs.title')} | ${selectedCategory !== 'all' && selectedCategory ? categories.find(c => c.id === selectedCategory)?.label : t('listings')}`;
+  const pageDescription = `${t('search.placeholder')} ${selectedCategory !== 'all' && selectedCategory ? categories.find(c => c.id === selectedCategory)?.label : t('listings')}. ${filteredJobs.length} ${t('jobs.title').toLowerCase()}.`;
 
   return (
     <>
@@ -87,9 +90,10 @@ const Index = () => {
           <div className="container mx-auto py-6">
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-3xl font-bold text-indigo-900">
-                Αγγελίες Εργασίας
+                {t('jobs.title')}
               </h1>
               <div className="flex items-center gap-4">
+                <LanguageSwitcher />
                 <a 
                   href="https://www.facebook.com/profile.php?id=61565350984901"
                   target="_blank"
@@ -119,14 +123,14 @@ const Index = () => {
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400 w-5 h-5" />
               <Input
                 type="search"
-                placeholder="Αναζήτηση αγγελιών..."
+                placeholder={t('search.placeholder')}
                 className="pl-10 border-indigo-200 focus:border-indigo-400"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                aria-label="Αναζήτηση αγγελιών"
+                aria-label={t('search.placeholder')}
               />
             </div>
-            <nav aria-label="Κατηγορίες εργασίας" className="flex justify-center">
+            <nav aria-label={t('jobs.title')} className="flex justify-center">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full md:w-auto bg-white">
@@ -168,18 +172,18 @@ const Index = () => {
           <Tabs defaultValue="listings" className="space-y-6">
             <TabsList className="bg-white">
               <TabsTrigger value="listings" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
-                Αγγελίες
+                {t('listings')}
               </TabsTrigger>
               <TabsTrigger value="post" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
-                Καταχώρηση Αγγελίας
+                {t('post.job')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="listings" className="space-y-4">
               {isLoading ? (
-                <div className="text-center py-8" role="status" aria-live="polite">Φόρτωση αγγελιών...</div>
+                <div className="text-center py-8" role="status" aria-live="polite">{t('loading')}</div>
               ) : filteredJobs.length > 0 ? (
-                <section aria-label="Λίστα αγγελιών">
+                <section aria-label={t('jobs.title')}>
                   {filteredJobs.map((job) => (
                     <article key={job.id}>
                       <JobCard job={job} />
@@ -188,7 +192,7 @@ const Index = () => {
                 </section>
               ) : (
                 <div className="text-center py-8 text-gray-500" role="status" aria-live="polite">
-                  Δεν βρέθηκαν αγγελίες με τα επιλεγμένα κριτήρια
+                  {t('no.results')}
                 </div>
               )}
             </TabsContent>
