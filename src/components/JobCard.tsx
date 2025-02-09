@@ -24,7 +24,7 @@ export const JobCard = ({ job }: JobCardProps) => {
   const expirationDate = job.expires_at ? new Date(job.expires_at) : null;
   const postedDate = job.posted_at ? new Date(job.posted_at) : new Date();
   
-  // Adjust for GMT+2
+  // Adjust for GMT+2 (Greek timezone)
   const adjustedPostedDate = new Date(postedDate.getTime() + (2 * 60 * 60 * 1000));
   
   const daysLeft = expirationDate 
