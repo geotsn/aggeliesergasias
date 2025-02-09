@@ -33,9 +33,44 @@ export const JobCard = ({ job }: JobCardProps) => {
     ? Math.ceil((expirationDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24))
     : 30;
 
-  // Determine which title and description to show based on language
-  const displayTitle = i18n.language === 'en' && job.title_en ? job.title_en : job.title;
-  const displayDescription = i18n.language === 'en' && job.description_en ? job.description_en : job.description;
+  // Function to get the title in the current language
+  const getLocalizedTitle = () => {
+    switch (i18n.language) {
+      case 'en':
+        return job.title_en || job.title;
+      case 'zh':
+        return job.title_zh || job.title_en || job.title;
+      case 'ru':
+        return job.title_ru || job.title_en || job.title;
+      case 'es':
+        return job.title_es || job.title_en || job.title;
+      case 'de':
+        return job.title_de || job.title_en || job.title;
+      default:
+        return job.title;
+    }
+  };
+
+  // Function to get the description in the current language
+  const getLocalizedDescription = () => {
+    switch (i18n.language) {
+      case 'en':
+        return job.description_en || job.description;
+      case 'zh':
+        return job.description_zh || job.description_en || job.description;
+      case 'ru':
+        return job.description_ru || job.description_en || job.description;
+      case 'es':
+        return job.description_es || job.description_en || job.description;
+      case 'de':
+        return job.description_de || job.description_en || job.description;
+      default:
+        return job.description;
+    }
+  };
+
+  const displayTitle = getLocalizedTitle();
+  const displayDescription = getLocalizedDescription();
 
   const handleShare = async () => {
     try {
@@ -46,8 +81,8 @@ export const JobCard = ({ job }: JobCardProps) => {
       });
     } catch (err) {
       toast({
-        title: "Αντιγράφηκε στο πρόχειρο",
-        description: "Μπορείτε να μοιραστείτε την αγγελία",
+        title: t('share.copied'),
+        description: t('share.description'),
       });
     }
   };
@@ -55,8 +90,8 @@ export const JobCard = ({ job }: JobCardProps) => {
   const handleSendCV = (emailClient: string) => {
     if (!job.email) {
       toast({
-        title: "Σφάλμα",
-        description: "Δεν υπάρχει διαθέσιμο email για αυτή την αγγελία",
+        title: t('error'),
+        description: t('email.not.available'),
         variant: "destructive",
       });
       return;
@@ -110,7 +145,7 @@ export const JobCard = ({ job }: JobCardProps) => {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1">
               <CalendarIcon className="w-4 h-4 text-indigo-400" />
-              {isValid(adjustedPostedDate) ? format(adjustedPostedDate, "d MMMM yyyy, HH:mm", { locale: el }) : 'Μη διαθέσιμη ημερομηνία'}
+              {isValid(adjustedPostedDate) ? format(adjustedPostedDate, "d MMMM yyyy, HH:mm", { locale: el }) : t('date.not.available')}
             </div>
             <div className="text-indigo-600 font-medium">
               {daysLeft > 0 ? t('days.remaining', { count: daysLeft }) : t('expired')}
@@ -157,7 +192,7 @@ export const JobCard = ({ job }: JobCardProps) => {
                 Yahoo Mail
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleSendCV('default')}>
-                Άλλο email client
+                {t('other.email.client')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

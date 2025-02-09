@@ -15,7 +15,11 @@ export type Database = {
           company: string
           created_at: string | null
           description: string
+          description_de: string | null
           description_en: string | null
+          description_es: string | null
+          description_ru: string | null
+          description_zh: string | null
           email: string | null
           expires_at: string | null
           id: string
@@ -26,7 +30,11 @@ export type Database = {
           salary: string | null
           source: string
           title: string
+          title_de: string | null
           title_en: string | null
+          title_es: string | null
+          title_ru: string | null
+          title_zh: string | null
           type: string
           updated_at: string | null
           url: string
@@ -36,7 +44,11 @@ export type Database = {
           company: string
           created_at?: string | null
           description: string
+          description_de?: string | null
           description_en?: string | null
+          description_es?: string | null
+          description_ru?: string | null
+          description_zh?: string | null
           email?: string | null
           expires_at?: string | null
           id?: string
@@ -47,7 +59,11 @@ export type Database = {
           salary?: string | null
           source: string
           title: string
+          title_de?: string | null
           title_en?: string | null
+          title_es?: string | null
+          title_ru?: string | null
+          title_zh?: string | null
           type: string
           updated_at?: string | null
           url: string
@@ -57,7 +73,11 @@ export type Database = {
           company?: string
           created_at?: string | null
           description?: string
+          description_de?: string | null
           description_en?: string | null
+          description_es?: string | null
+          description_ru?: string | null
+          description_zh?: string | null
           email?: string | null
           expires_at?: string | null
           id?: string
@@ -68,7 +88,11 @@ export type Database = {
           salary?: string | null
           source?: string
           title?: string
+          title_de?: string | null
           title_en?: string | null
+          title_es?: string | null
+          title_ru?: string | null
+          title_zh?: string | null
           type?: string
           updated_at?: string | null
           url?: string
