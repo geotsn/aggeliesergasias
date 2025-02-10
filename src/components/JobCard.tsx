@@ -173,14 +173,14 @@ export const JobCard = ({ job }: JobCardProps) => {
 
         <div className="flex flex-col gap-2 text-sm text-gray-600">
           {job.phone && (
-            <div className="flex items-center gap-2">
-              <PhoneIcon className="w-4 h-4 text-indigo-400" />
+            <div className="flex items-center gap-2 break-all">
+              <PhoneIcon className="w-4 h-4 text-indigo-400 shrink-0" />
               {job.phone}
             </div>
           )}
           {job.email && (
-            <div className="flex items-center gap-2">
-              <MailIcon className="w-4 h-4 text-indigo-400" />
+            <div className="flex items-center gap-2 break-all">
+              <MailIcon className="w-4 h-4 text-indigo-400 shrink-0" />
               {job.email}
             </div>
           )}
@@ -219,4 +219,3 @@ export const JobCard = ({ job }: JobCardProps) => {
     </Card>
   );
 };
-
