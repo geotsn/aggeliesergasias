@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,8 +40,8 @@ export const JobPostForm = () => {
   };
 
   const handlePremiumPayment = async () => {
-    localStorage.setItem('pendingJobPost', JSON.stringify(formData));
-    window.location.href = "https://buy.stripe.com/14k9BR50e3s54vK000";
+    const stripeSessionUrl = `https://buy.stripe.com/14k9BR50e3s54vK000?client_reference_id=${encodeURIComponent(JSON.stringify(formData))}`;
+    window.location.href = stripeSessionUrl;
   };
 
   const validateForm = () => {
@@ -245,4 +244,3 @@ export const JobPostForm = () => {
     </form>
   );
 };
-
