@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Buffer } from "https://deno.land/std@0.168.0/node/buffer.ts";
 import Stripe from 'https://esm.sh/stripe@13.6.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,13 +37,13 @@ serve(async (req) => {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      const pendingJobData = session.metadata?.jobData;
+      const clientReferenceId = session.client_reference_id;
 
-      if (!pendingJobData) {
-        throw new Error('No job data found in session metadata');
+      if (!clientReferenceId) {
+        throw new Error('No job data found in client reference ID');
       }
 
-      const jobData = JSON.parse(pendingJobData);
+      const jobData = JSON.parse(clientReferenceId);
       console.log('Processing job data:', jobData);
 
       // Create supabase client
@@ -54,13 +55,16 @@ serve(async (req) => {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 30); // Premium jobs last 30 days
 
+      const postedAt = new Date();
+      postedAt.setHours(postedAt.getHours() + 2); // Adjust for GMT+2
+
       const { data, error } = await supabaseClient
         .from('jobs')
         .insert([{
           ...jobData,
           type: 'premium',
           is_active: true,
-          posted_at: new Date().toISOString(),
+          posted_at: postedAt.toISOString(),
           expires_at: expiresAt.toISOString()
         }]);
 

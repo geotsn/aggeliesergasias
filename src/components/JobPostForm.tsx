@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +41,14 @@ export const JobPostForm = () => {
   };
 
   const handlePremiumPayment = async () => {
-    const stripeSessionUrl = `https://buy.stripe.com/14k9BR50e3s54vK000?client_reference_id=${encodeURIComponent(JSON.stringify(formData))}`;
+    // Include source and url in the job data
+    const jobData = {
+      ...formData,
+      source: "web",
+      url: window.location.origin
+    };
+    
+    const stripeSessionUrl = `https://buy.stripe.com/14k9BR50e3s54vK000?client_reference_id=${encodeURIComponent(JSON.stringify(jobData))}`;
     window.location.href = stripeSessionUrl;
   };
 
