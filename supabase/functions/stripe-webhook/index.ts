@@ -10,6 +10,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Received webhook request');
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -22,12 +24,17 @@ serve(async (req) => {
     const signature = req.headers.get('stripe-signature');
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
     
+    console.log('Webhook secret exists:', !!webhookSecret);
+    console.log('Signature exists:', !!signature);
+
     if (!signature || !webhookSecret) {
       console.error('Missing stripe signature or webhook secret');
       throw new Error('Missing stripe signature or webhook secret');
     }
 
     const body = await req.text();
+    console.log('Received webhook body length:', body.length);
+
     let event;
     
     try {
@@ -36,6 +43,7 @@ serve(async (req) => {
         signature,
         webhookSecret
       );
+      console.log('Successfully constructed event');
     } catch (err) {
       console.error('Error verifying webhook signature:', err);
       throw new Error(`Webhook signature verification failed: ${err.message}`);
@@ -44,8 +52,16 @@ serve(async (req) => {
     console.log('Stripe webhook event:', event.type);
 
     if (event.type === 'checkout.session.completed') {
+      console.log('Processing completed checkout session');
       const session = event.data.object;
       const clientReferenceId = session.client_reference_id;
+
+      console.log('Session data:', {
+        id: session.id,
+        clientReferenceId,
+        paymentStatus: session.payment_status,
+        status: session.status
+      });
 
       if (!clientReferenceId) {
         console.error('No client reference ID found in session:', session);
@@ -65,6 +81,9 @@ serve(async (req) => {
       const supabaseUrl = Deno.env.get('SUPABASE_URL');
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
       
+      console.log('Supabase URL exists:', !!supabaseUrl);
+      console.log('Supabase service key exists:', !!supabaseServiceKey);
+
       if (!supabaseUrl || !supabaseServiceKey) {
         console.error('Missing Supabase credentials');
         throw new Error('Missing Supabase credentials');
@@ -87,27 +106,23 @@ serve(async (req) => {
         throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
       }
 
-      console.log('Attempting to insert job with data:', {
+      const jobToInsert = {
         ...jobData,
         type: 'premium',
         is_active: true,
         posted_at: postedAt.toISOString(),
         expires_at: expiresAt.toISOString()
-      });
+      };
+
+      console.log('Attempting to insert job with data:', jobToInsert);
 
       const { data, error } = await supabaseClient
         .from('jobs')
-        .insert([{
-          ...jobData,
-          type: 'premium',
-          is_active: true,
-          posted_at: postedAt.toISOString(),
-          expires_at: expiresAt.toISOString()
-        }])
+        .insert([jobToInsert])
         .select();
 
       if (error) {
-        console.error('Error inserting job:', error, 'Job data:', jobData);
+        console.error('Error inserting job:', error, 'Job data:', jobToInsert);
         throw error;
       }
 
