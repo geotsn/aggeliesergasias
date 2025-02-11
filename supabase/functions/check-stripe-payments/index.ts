@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import Stripe from 'https://esm.sh/stripe@13.6.0';
@@ -17,17 +18,21 @@ serve(async (req) => {
       apiVersion: '2023-10-16',
     });
 
-    // Αντί για την τρέχουσα ημέρα, ελέγχουμε όλες τις πληρωμές
-    console.log('Checking all historical payments');
+    console.log('Starting to check Stripe payments...');
 
     // Ανάκτηση όλων των ολοκληρωμένων συνεδριών checkout
-    const sessions = await stripe.checkout.sessions.list({
-      limit: 100, // Μέγιστος αριθμός που επιτρέπει το Stripe API
-      payment_status: 'paid',
-      status: 'complete',
-    });
-
-    console.log(`Found ${sessions.data.length} completed payments`);
+    let sessions;
+    try {
+      sessions = await stripe.checkout.sessions.list({
+        limit: 100,
+        payment_status: 'paid',
+        status: 'complete',
+      });
+      console.log(`Found ${sessions.data.length} completed Stripe sessions`);
+    } catch (stripeError) {
+      console.error('Error fetching Stripe sessions:', stripeError);
+      throw new Error(`Stripe API error: ${stripeError.message}`);
+    }
 
     // Σύνδεση με Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -42,6 +47,8 @@ serve(async (req) => {
 
     // Επεξεργασία κάθε πληρωμένης συνεδρίας
     for (const session of sessions.data) {
+      console.log(`Processing session ${session.id}...`);
+
       if (!session.client_reference_id) {
         console.log(`Session ${session.id} has no client reference ID, skipping`);
         continue;
@@ -55,6 +62,7 @@ serve(async (req) => {
           console.log('Successfully decoded job data:', jobData);
         } catch (error) {
           console.error(`Error decoding job data for session ${session.id}:`, error);
+          console.log('Raw client_reference_id:', session.client_reference_id);
           continue;
         }
 
@@ -68,12 +76,17 @@ serve(async (req) => {
         }
 
         // Έλεγχος αν η αγγελία έχει ήδη καταχωρηθεί
-        const { data: existingJobs } = await supabaseClient
+        const { data: existingJobs, error: queryError } = await supabaseClient
           .from('jobs')
           .select('id')
           .eq('source', 'web')
           .eq('title', jobData.title)
           .eq('company', jobData.company);
+
+        if (queryError) {
+          console.error(`Error checking for existing job for session ${session.id}:`, queryError);
+          continue;
+        }
 
         if (existingJobs && existingJobs.length > 0) {
           console.log(`Job already exists for session ${session.id}, skipping`);
@@ -99,6 +112,8 @@ serve(async (req) => {
           url: jobData.url || 'https://aggeliesergasias.eu'
         };
 
+        console.log('Attempting to insert job:', jobToInsert);
+
         const { error: insertError } = await supabaseClient
           .from('jobs')
           .insert([jobToInsert]);
@@ -109,7 +124,7 @@ serve(async (req) => {
         }
 
         processedCount++;
-        console.log(`Successfully processed job for session ${session.id}`);
+        console.log(`Successfully processed and inserted job for session ${session.id}`);
 
       } catch (error) {
         console.error(`Error processing session ${session.id}:`, error);
