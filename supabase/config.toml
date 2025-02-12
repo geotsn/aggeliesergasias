@@ -24,37 +24,13 @@ port = 54324
 
 [storage]
 enabled = true
-port = 54325
 
 [auth]
 enabled = true
-port = 54326
 
 [analytics]
 enabled = true
-port = 54327
 
 [realtime]
 enabled = true
-port = 54328
 
-[edge_functions]
-[edge_functions.stripe-webhook]
-verify_jwt = false
-[edge_functions.check-stripe-payments]
-verify_jwt = false
-
-[services.gotrue]
-port = 54329
-[services.postgrest]
-port = 54330
-[services.pgbouncer]
-port = 54331
-[services.kong]
-port = 54332
-[services.fiber_postgrest]
-port = 54333
-[services.fiber_swagger]
-port = 54334
-[services.fiber_pgbouncer]
-port = 54335
