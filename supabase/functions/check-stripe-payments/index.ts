@@ -32,14 +32,20 @@ serve(async (req) => {
     try {
       sessions = await stripe.checkout.sessions.list({
         limit: 100,
-        payment_status: 'paid',
         status: 'complete',
+        expand: ['data.payment_intent']
       });
       console.log(`Found ${sessions.data.length} completed Stripe sessions`);
     } catch (stripeError) {
       console.error('Error fetching Stripe sessions:', stripeError);
       throw new Error(`Stripe API error: ${stripeError.message}`);
     }
+
+    // Φιλτράρισμα για να κρατήσουμε μόνο τις πληρωμένες συνεδρίες
+    const paidSessions = sessions.data.filter(session => 
+      session.payment_status === 'paid' && session.status === 'complete'
+    );
+    console.log(`Found ${paidSessions.length} paid sessions`);
 
     // Σύνδεση με Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -53,7 +59,7 @@ serve(async (req) => {
     let processedCount = 0;
 
     // Επεξεργασία κάθε πληρωμένης συνεδρίας
-    for (const session of sessions.data) {
+    for (const session of paidSessions) {
       console.log(`Processing session ${session.id}...`);
 
       if (!session.client_reference_id) {
