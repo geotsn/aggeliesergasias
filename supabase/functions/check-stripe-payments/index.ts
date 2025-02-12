@@ -16,38 +16,34 @@ serve(async (req) => {
   try {
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
     
-    if (!stripeSecretKey || !stripeSecretKey.startsWith('sk_')) {
-      console.error('Invalid or missing Stripe secret key');
-      throw new Error('Invalid Stripe configuration. Please check your secret key.');
+    if (!stripeSecretKey) {
+      throw new Error('Missing Stripe secret key');
     }
 
     const stripe = new Stripe(stripeSecretKey, {
       apiVersion: '2023-10-16',
     });
 
-    console.log('Starting to check Stripe payments...');
+    console.log('Checking for paid Stripe sessions...');
 
-    // Ανάκτηση όλων των ολοκληρωμένων συνεδριών checkout
-    let sessions;
-    try {
-      sessions = await stripe.checkout.sessions.list({
-        limit: 100,
-        status: 'complete',
-        expand: ['data.payment_intent']
-      });
-      console.log(`Found ${sessions.data.length} completed Stripe sessions`);
-    } catch (stripeError) {
-      console.error('Error fetching Stripe sessions:', stripeError);
-      throw new Error(`Stripe API error: ${stripeError.message}`);
-    }
+    // Ανάκτηση όλων των συνεδριών των τελευταίων 24 ωρών
+    const yesterday = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+    
+    const sessions = await stripe.checkout.sessions.list({
+      limit: 100,
+      created: { gte: yesterday },
+      expand: ['data.payment_intent']
+    });
 
-    // Φιλτράρισμα για να κρατήσουμε μόνο τις πληρωμένες συνεδρίες
-    const paidSessions = sessions.data.filter(session => 
-      session.payment_status === 'paid' && session.status === 'complete'
+    console.log(`Found ${sessions.data.length} recent sessions`);
+
+    // Φιλτράρισμα για ολοκληρωμένες συνεδρίες
+    const completedSessions = sessions.data.filter(
+      session => session.status === 'complete' && session.client_reference_id
     );
-    console.log(`Found ${paidSessions.length} paid sessions`);
 
-    // Σύνδεση με Supabase
+    console.log(`Found ${completedSessions.length} completed sessions`);
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
@@ -55,66 +51,39 @@ serve(async (req) => {
       throw new Error('Missing Supabase credentials');
     }
 
-    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     let processedCount = 0;
 
-    // Επεξεργασία κάθε πληρωμένης συνεδρίας
-    for (const session of paidSessions) {
-      console.log(`Processing session ${session.id}...`);
-
-      if (!session.client_reference_id) {
-        console.log(`Session ${session.id} has no client reference ID, skipping`);
-        continue;
-      }
-
+    // Επεξεργασία κάθε ολοκληρωμένης συνεδρίας
+    for (const session of completedSessions) {
       try {
-        // Αποκωδικοποίηση των δεδομένων της αγγελίας
-        let jobData;
-        try {
-          jobData = JSON.parse(decodeURIComponent(session.client_reference_id));
-          console.log('Successfully decoded job data:', jobData);
-        } catch (error) {
-          console.error(`Error decoding job data for session ${session.id}:`, error);
-          console.log('Raw client_reference_id:', session.client_reference_id);
-          continue;
-        }
-
-        // Έλεγχος για τα απαραίτητα πεδία
-        const requiredFields = ['title', 'company', 'location', 'description'];
-        const missingFields = requiredFields.filter(field => !jobData[field]);
+        console.log(`Processing session ${session.id}`);
         
-        if (missingFields.length > 0) {
-          console.error(`Missing required fields for session ${session.id}:`, missingFields);
-          continue;
-        }
-
-        // Έλεγχος αν η αγγελία έχει ήδη καταχωρηθεί
-        const { data: existingJobs, error: queryError } = await supabaseClient
+        // Αποκωδικοποίηση δεδομένων αγγελίας
+        const jobData = JSON.parse(decodeURIComponent(session.client_reference_id!));
+        
+        // Έλεγχος για διπλότυπη καταχώρηση
+        const { data: existingJobs } = await supabase
           .from('jobs')
           .select('id')
           .eq('source', 'web')
           .eq('title', jobData.title)
           .eq('company', jobData.company);
 
-        if (queryError) {
-          console.error(`Error checking for existing job for session ${session.id}:`, queryError);
-          continue;
-        }
-
         if (existingJobs && existingJobs.length > 0) {
           console.log(`Job already exists for session ${session.id}, skipping`);
           continue;
         }
 
-        // Υπολογισμός των ημερομηνιών με βάση την ημερομηνία πληρωμής
-        const paymentDate = new Date(session.created * 1000);
-        const expiresAt = new Date(paymentDate);
-        expiresAt.setDate(expiresAt.getDate() + 30);
+        // Υπολογισμός ημερομηνιών
+        const now = new Date();
+        const expiresAt = new Date(now);
+        expiresAt.setDate(now.getDate() + 30);
 
-        const postedAt = new Date(paymentDate);
-        postedAt.setHours(postedAt.getHours() + 2);
+        const postedAt = new Date(now);
+        postedAt.setHours(now.getHours() + 2);
 
-        // Καταχώρηση της αγγελίας
+        // Προετοιμασία δεδομένων αγγελίας
         const jobToInsert = {
           ...jobData,
           type: 'premium',
@@ -125,9 +94,8 @@ serve(async (req) => {
           url: jobData.url || 'https://aggeliesergasias.eu'
         };
 
-        console.log('Attempting to insert job:', jobToInsert);
-
-        const { error: insertError } = await supabaseClient
+        // Εισαγωγή της αγγελίας
+        const { error: insertError } = await supabase
           .from('jobs')
           .insert([jobToInsert]);
 
@@ -137,31 +105,32 @@ serve(async (req) => {
         }
 
         processedCount++;
-        console.log(`Successfully processed and inserted job for session ${session.id}`);
+        console.log(`Successfully processed job for session ${session.id}`);
 
       } catch (error) {
         console.error(`Error processing session ${session.id}:`, error);
+        continue;
       }
     }
 
-    const result = {
-      totalPayments: sessions.data.length,
-      processedJobs: processedCount,
-      checkedAt: new Date().toISOString()
-    };
-
-    console.log('Processing completed:', result);
-
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        totalSessions: sessions.data.length,
+        completedSessions: completedSessions.length,
+        processedJobs: processedCount
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      }
+    );
 
   } catch (error) {
-    console.error('Error checking payments:', error);
+    console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }), 
-      { 
+      JSON.stringify({ error: error.message }),
+      {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
       }
