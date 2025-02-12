@@ -14,7 +14,14 @@ serve(async (req) => {
   }
 
   try {
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+    
+    if (!stripeSecretKey || !stripeSecretKey.startsWith('sk_')) {
+      console.error('Invalid or missing Stripe secret key');
+      throw new Error('Invalid Stripe configuration. Please check your secret key.');
+    }
+
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: '2023-10-16',
     });
 
