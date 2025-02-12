@@ -70,7 +70,7 @@ serve(async (req) => {
 
       let jobData;
       try {
-        jobData = JSON.parse(clientReferenceId);
+        jobData = JSON.parse(decodeURIComponent(clientReferenceId));
         console.log('Successfully parsed job data:', jobData);
       } catch (err) {
         console.error('Error parsing job data:', err, 'Raw client reference ID:', clientReferenceId);
@@ -111,7 +111,9 @@ serve(async (req) => {
         type: 'premium',
         is_active: true,
         posted_at: postedAt.toISOString(),
-        expires_at: expiresAt.toISOString()
+        expires_at: expiresAt.toISOString(),
+        source: 'web',
+        url: jobData.url || 'https://aggeliesergasias.eu'
       };
 
       console.log('Attempting to insert job with data:', jobToInsert);
