@@ -76,15 +76,14 @@ serve(async (req) => {
           continue;
         }
         
-        // Ενημέρωση της υπάρχουσας εγγραφής
+        // Ενημέρωση της υπάρχουσας εγγραφής με βάση το ID
         const { error: updateError, data: updatedData } = await supabase
           .from('jobs')
           .update({
             payment_status: 'completed',
             is_active: true
           })
-          .eq('title', jobData.title)
-          .eq('company', jobData.company)
+          .eq('id', jobData.id)
           .eq('payment_status', 'pending')
           .select();
 
@@ -96,10 +95,7 @@ serve(async (req) => {
         console.log('Update result:', updatedData);
 
         if (!updatedData || updatedData.length === 0) {
-          console.log('No pending job found to update for:', {
-            title: jobData.title,
-            company: jobData.company
-          });
+          console.log('No pending job found to update for ID:', jobData.id);
           continue;
         }
 

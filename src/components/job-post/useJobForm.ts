@@ -22,6 +22,7 @@ export const useJobForm = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<JobFormData>(initialFormData);
+  const [jobId, setJobId] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -61,7 +62,7 @@ export const useJobForm = () => {
     postedAt.setHours(postedAt.getHours() + 2);
 
     // Αποθήκευση της αγγελίας με κατάσταση 'pending'
-    const { data, error } = await supabase.from("jobs").insert([
+    const { data: jobData, error } = await supabase.from("jobs").insert([
       {
         ...formData,
         posted_at: postedAt.toISOString(),
@@ -72,25 +73,29 @@ export const useJobForm = () => {
         payment_status: 'pending',
         type: 'premium'
       }
-    ]).select();
+    ]).select().single();
 
     if (error) {
       console.error("Error saving pending job:", error);
       throw new Error(error.message || t('error'));
     }
 
-    const jobData = {
-      ...formData,
-      source: "web",
-      url: window.location.origin
+    console.log("Created pending job:", jobData);
+
+    // Προσθήκη του ID της αγγελίας στα δεδομένα που στέλνουμε στο Stripe
+    const stripeData = {
+      id: jobData.id,
+      title: formData.title,
+      company: formData.company
     };
     
-    const stripeSessionUrl = `https://buy.stripe.com/14k9BR50e3s54vK000?client_reference_id=${encodeURIComponent(JSON.stringify(jobData))}`;
+    const stripeSessionUrl = `https://buy.stripe.com/14k9BR50e3s54vK000?client_reference_id=${encodeURIComponent(JSON.stringify(stripeData))}`;
     window.location.href = stripeSessionUrl;
   };
 
   const resetForm = () => {
     setFormData(initialFormData);
+    setJobId(null);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
