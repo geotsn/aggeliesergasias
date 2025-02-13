@@ -68,80 +68,63 @@ serve(async (req) => {
 
     console.log(`Found ${pendingJobs?.length || 0} pending jobs in database`);
     
-    if (pendingJobs) {
-      for (const job of pendingJobs) {
-        console.log(`Checking job ID: ${job.id}`);
+    // Λίστα των IDs από τις πληρωμένες συνεδρίες
+    const paidJobIds = new Set<string>();
+    
+    // Συλλογή όλων των IDs από τις πληρωμένες συνεδρίες
+    for (const session of completedSessions) {
+      try {
+        if (!session.client_reference_id) continue;
+        const jobData = JSON.parse(decodeURIComponent(session.client_reference_id));
+        if (jobData.id) {
+          paidJobIds.add(jobData.id);
+          console.log(`Found paid job ID: ${jobData.id}`);
+        }
+      } catch (error) {
+        console.error('Error parsing session data:', error);
       }
     }
 
-    // Επεξεργασία κάθε ολοκληρωμένης συνεδρίας
-    for (const session of completedSessions) {
-      try {
-        console.log(`\nProcessing session ${session.id}`);
-        console.log('Session status:', session.status);
-        console.log('Payment status:', session.payment_status);
-        console.log('Client reference ID:', session.client_reference_id);
-        
-        if (!session.client_reference_id) {
-          console.log('No client reference ID found for session:', session.id);
-          continue;
-        }
+    console.log(`Found ${paidJobIds.size} unique paid job IDs`);
 
-        // Αποκωδικοποίηση δεδομένων αγγελίας
-        let jobData;
-        try {
-          jobData = JSON.parse(decodeURIComponent(session.client_reference_id));
-          console.log('Successfully decoded job data:', jobData);
-        } catch (error) {
-          console.error('Error decoding job data:', error);
-          continue;
-        }
+    // Ενημέρωση όλων των πληρωμένων αγγελιών
+    if (paidJobIds.size > 0) {
+      for (const jobId of paidJobIds) {
+        console.log(`Processing job ID: ${jobId}`);
         
-        // Ενημέρωση της υπάρχουσας εγγραφής με βάση το ID
-        const { error: updateError, data: updatedData } = await supabase
+        // Έλεγχος της τρέχουσας κατάστασης της αγγελίας
+        const { data: jobStatus, error: statusError } = await supabase
           .from('jobs')
-          .update({
-            payment_status: 'completed',
-            is_active: true
-          })
-          .eq('id', jobData.id)
-          .eq('payment_status', 'pending')
-          .select();
+          .select('payment_status, is_active')
+          .eq('id', jobId)
+          .single();
 
-        if (updateError) {
-          console.error(`Error updating job for session ${session.id}:`, updateError);
+        if (statusError) {
+          console.error(`Error checking status for job ${jobId}:`, statusError);
           continue;
         }
 
-        console.log('Update result:', updatedData);
+        console.log(`Current job status:`, jobStatus);
 
-        if (!updatedData || updatedData.length === 0) {
-          // Αν δεν βρέθηκε η αγγελία, ψάχνουμε να δούμε αν υπάρχει γενικά
-          const { data: existingJob, error: checkError } = await supabase
+        // Ενημέρωση μόνο αν χρειάζεται
+        if (jobStatus.payment_status !== 'completed' || !jobStatus.is_active) {
+          const { error: updateError } = await supabase
             .from('jobs')
-            .select('*')
-            .eq('id', jobData.id)
-            .single();
+            .update({
+              payment_status: 'completed',
+              is_active: true
+            })
+            .eq('id', jobId);
 
-          if (checkError) {
-            console.error(`Error checking job existence for ID ${jobData.id}:`, checkError);
+          if (updateError) {
+            console.error(`Error updating job ${jobId}:`, updateError);
           } else {
-            console.log(`Job status for ID ${jobData.id}:`, {
-              exists: !!existingJob,
-              payment_status: existingJob?.payment_status,
-              is_active: existingJob?.is_active
-            });
+            console.log(`Successfully activated job ${jobId}`);
+            processedCount++;
           }
-          
-          continue;
+        } else {
+          console.log(`Job ${jobId} already activated`);
         }
-
-        processedCount++;
-        console.log(`Successfully processed job for session ${session.id}`);
-
-      } catch (error) {
-        console.error(`Error processing session ${session.id}:`, error);
-        continue;
       }
     }
 
@@ -150,8 +133,8 @@ serve(async (req) => {
         success: true,
         totalSessions: sessions.data.length,
         completedSessions: completedSessions.length,
-        processedJobs: processedCount,
-        pendingJobs: pendingJobs?.length || 0
+        uniquePaidJobs: paidJobIds.size,
+        processedJobs: processedCount
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
