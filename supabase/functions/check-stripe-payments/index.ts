@@ -58,12 +58,26 @@ serve(async (req) => {
     for (const session of completedSessions) {
       try {
         console.log(`Processing session ${session.id}`);
+        console.log('Session status:', session.status);
+        console.log('Payment status:', session.payment_status);
         
+        if (!session.client_reference_id) {
+          console.log('No client reference ID found for session:', session.id);
+          continue;
+        }
+
         // Αποκωδικοποίηση δεδομένων αγγελίας
-        const jobData = JSON.parse(decodeURIComponent(session.client_reference_id!));
+        let jobData;
+        try {
+          jobData = JSON.parse(decodeURIComponent(session.client_reference_id));
+          console.log('Successfully decoded job data:', jobData);
+        } catch (error) {
+          console.error('Error decoding job data:', error);
+          continue;
+        }
         
         // Ενημέρωση της υπάρχουσας εγγραφής
-        const { error: updateError } = await supabase
+        const { error: updateError, data: updatedData } = await supabase
           .from('jobs')
           .update({
             payment_status: 'completed',
@@ -71,10 +85,21 @@ serve(async (req) => {
           })
           .eq('title', jobData.title)
           .eq('company', jobData.company)
-          .eq('payment_status', 'pending');
+          .eq('payment_status', 'pending')
+          .select();
 
         if (updateError) {
           console.error(`Error updating job for session ${session.id}:`, updateError);
+          continue;
+        }
+
+        console.log('Update result:', updatedData);
+
+        if (!updatedData || updatedData.length === 0) {
+          console.log('No pending job found to update for:', {
+            title: jobData.title,
+            company: jobData.company
+          });
           continue;
         }
 
