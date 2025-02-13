@@ -27,4 +27,5 @@ export interface JobListing {
   updated_at?: string;
   category?: string;
   expires_at?: string;
+  payment_status?: 'pending' | 'completed';
 }

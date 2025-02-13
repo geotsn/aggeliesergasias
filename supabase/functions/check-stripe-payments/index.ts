@@ -62,45 +62,19 @@ serve(async (req) => {
         // Αποκωδικοποίηση δεδομένων αγγελίας
         const jobData = JSON.parse(decodeURIComponent(session.client_reference_id!));
         
-        // Έλεγχος για διπλότυπη καταχώρηση
-        const { data: existingJobs } = await supabase
+        // Ενημέρωση της υπάρχουσας εγγραφής
+        const { error: updateError } = await supabase
           .from('jobs')
-          .select('id')
-          .eq('source', 'web')
+          .update({
+            payment_status: 'completed',
+            is_active: true
+          })
           .eq('title', jobData.title)
-          .eq('company', jobData.company);
+          .eq('company', jobData.company)
+          .eq('payment_status', 'pending');
 
-        if (existingJobs && existingJobs.length > 0) {
-          console.log(`Job already exists for session ${session.id}, skipping`);
-          continue;
-        }
-
-        // Υπολογισμός ημερομηνιών
-        const now = new Date();
-        const expiresAt = new Date(now);
-        expiresAt.setDate(now.getDate() + 30);
-
-        const postedAt = new Date(now);
-        postedAt.setHours(now.getHours() + 2);
-
-        // Προετοιμασία δεδομένων αγγελίας
-        const jobToInsert = {
-          ...jobData,
-          type: 'premium',
-          is_active: true,
-          posted_at: postedAt.toISOString(),
-          expires_at: expiresAt.toISOString(),
-          source: 'web',
-          url: jobData.url || 'https://aggeliesergasias.eu'
-        };
-
-        // Εισαγωγή της αγγελίας
-        const { error: insertError } = await supabase
-          .from('jobs')
-          .insert([jobToInsert]);
-
-        if (insertError) {
-          console.error(`Error inserting job for session ${session.id}:`, insertError);
+        if (updateError) {
+          console.error(`Error updating job for session ${session.id}:`, updateError);
           continue;
         }
 

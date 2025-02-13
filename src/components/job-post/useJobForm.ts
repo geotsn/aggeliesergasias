@@ -53,7 +53,32 @@ export const useJobForm = () => {
     }
   };
 
-  const handlePremiumPayment = () => {
+  const handlePremiumPayment = async () => {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    const postedAt = new Date();
+    postedAt.setHours(postedAt.getHours() + 2);
+
+    // Αποθήκευση της αγγελίας με κατάσταση 'pending'
+    const { data, error } = await supabase.from("jobs").insert([
+      {
+        ...formData,
+        posted_at: postedAt.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        is_active: false,
+        source: "web",
+        url: window.location.origin,
+        payment_status: 'pending',
+        type: 'premium'
+      }
+    ]).select();
+
+    if (error) {
+      console.error("Error saving pending job:", error);
+      throw new Error(error.message || t('error'));
+    }
+
     const jobData = {
       ...formData,
       source: "web",
@@ -76,7 +101,7 @@ export const useJobForm = () => {
       validateForm();
 
       if (formData.type === "premium") {
-        handlePremiumPayment();
+        await handlePremiumPayment();
         return;
       }
 
@@ -93,7 +118,8 @@ export const useJobForm = () => {
           expires_at: expiresAt.toISOString(),
           is_active: true,
           source: "web",
-          url: window.location.origin
+          url: window.location.origin,
+          payment_status: 'completed'
         }
       ]).select();
 

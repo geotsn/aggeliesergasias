@@ -25,6 +25,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           location: string
+          payment_status: string | null
           phone: string | null
           posted_at: string | null
           salary: string | null
@@ -54,6 +55,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           location: string
+          payment_status?: string | null
           phone?: string | null
           posted_at?: string | null
           salary?: string | null
@@ -83,6 +85,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           location?: string
+          payment_status?: string | null
           phone?: string | null
           posted_at?: string | null
           salary?: string | null
