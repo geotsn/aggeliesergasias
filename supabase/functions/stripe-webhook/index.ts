@@ -59,90 +59,53 @@ serve(async (req) => {
       });
 
       // Μόνο αν η πληρωμή έχει ολοκληρωθεί
-      if (session.payment_status !== 'paid') {
-        console.log('Session not paid, skipping');
-        return new Response(JSON.stringify({ received: true }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        });
+      if (session.payment_status === 'paid' && session.status === 'complete') {
+        const clientReferenceId = session.client_reference_id;
+        if (!clientReferenceId) {
+          console.error('No client reference ID found');
+          return new Response(JSON.stringify({ received: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          });
+        }
+
+        let jobData;
+        try {
+          jobData = JSON.parse(decodeURIComponent(clientReferenceId));
+          console.log('Successfully parsed job data:', jobData);
+        } catch (err) {
+          console.error('Error parsing job data:', err);
+          throw new Error('Invalid job data format');
+        }
+
+        const supabaseUrl = Deno.env.get('SUPABASE_URL');
+        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+        
+        if (!supabaseUrl || !supabaseServiceKey) {
+          throw new Error('Missing Supabase credentials');
+        }
+
+        const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+
+        console.log('Updating job with ID:', jobData.id);
+
+        const { data, error } = await supabaseClient
+          .from('jobs')
+          .update({
+            payment_status: 'completed',
+            is_active: true
+          })
+          .eq('id', jobData.id)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error updating job:', error);
+          throw error;
+        }
+
+        console.log('Successfully updated job:', data);
       }
-
-      const clientReferenceId = session.client_reference_id;
-      if (!clientReferenceId) {
-        throw new Error('No client reference ID found');
-      }
-
-      let jobData;
-      try {
-        jobData = JSON.parse(decodeURIComponent(clientReferenceId));
-        console.log('Successfully parsed job data:', jobData);
-      } catch (err) {
-        console.error('Error parsing job data:', err);
-        throw new Error('Invalid job data format');
-      }
-
-      const supabaseUrl = Deno.env.get('SUPABASE_URL');
-      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-      
-      if (!supabaseUrl || !supabaseServiceKey) {
-        throw new Error('Missing Supabase credentials');
-      }
-
-      const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
-
-      // Έλεγχος για τα απαραίτητα πεδία
-      const requiredFields = ['title', 'company', 'location', 'description'];
-      const missingFields = requiredFields.filter(field => !jobData[field]);
-      
-      if (missingFields.length > 0) {
-        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-      }
-
-      // Έλεγχος για διπλότυπη καταχώρηση
-      const { data: existingJobs } = await supabaseClient
-        .from('jobs')
-        .select('id')
-        .eq('source', 'web')
-        .eq('title', jobData.title)
-        .eq('company', jobData.company);
-
-      if (existingJobs && existingJobs.length > 0) {
-        console.log('Job already exists, skipping');
-        return new Response(JSON.stringify({ received: true }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        });
-      }
-
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 30);
-
-      const postedAt = new Date();
-      postedAt.setHours(postedAt.getHours() + 2);
-
-      const jobToInsert = {
-        ...jobData,
-        type: 'premium',
-        is_active: true,
-        posted_at: postedAt.toISOString(),
-        expires_at: expiresAt.toISOString(),
-        source: 'web',
-        url: jobData.url || 'https://aggeliesergasias.eu'
-      };
-
-      console.log('Inserting job:', jobToInsert);
-
-      const { data, error } = await supabaseClient
-        .from('jobs')
-        .insert([jobToInsert])
-        .select();
-
-      if (error) {
-        console.error('Error inserting job:', error);
-        throw error;
-      }
-
-      console.log('Successfully created premium job:', data);
     }
 
     return new Response(JSON.stringify({ received: true }), {

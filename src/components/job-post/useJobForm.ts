@@ -22,7 +22,6 @@ export const useJobForm = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<JobFormData>(initialFormData);
-  const [jobId, setJobId] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -86,26 +85,18 @@ export const useJobForm = () => {
       throw new Error("Failed to create job listing");
     }
 
-    // Δημιουργία του URL για το Stripe Checkout με το client_reference_id
+    // Δημιουργία του reference ID για το Stripe
     const reference = {
       id: jobData.id,
       title: formData.title,
       company: formData.company
     };
-    
+
+    // Δημιουργία του URL για το Stripe Checkout 
     const stripeCheckoutUrl = `https://buy.stripe.com/14k9BR50e3s54vK000?client_reference_id=${encodeURIComponent(JSON.stringify(reference))}`;
-    
-    // Αποθήκευση του ID της αγγελίας στο localStorage για μελλοντική αναφορά
-    localStorage.setItem('pendingJobId', jobData.id);
     
     // Ανακατεύθυνση στο Stripe Checkout
     window.location.href = stripeCheckoutUrl;
-  };
-
-  const resetForm = () => {
-    setFormData(initialFormData);
-    setJobId(null);
-    localStorage.removeItem('pendingJobId');
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -148,7 +139,7 @@ export const useJobForm = () => {
         description: "Η αγγελία σας δημοσιεύτηκε επιτυχώς.",
       });
 
-      resetForm();
+      setFormData(initialFormData);
 
     } catch (error) {
       console.error("Error submitting job:", error);
