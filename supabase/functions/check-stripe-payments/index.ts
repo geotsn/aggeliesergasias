@@ -31,132 +31,156 @@ serve(async (req) => {
       throw new Error('Missing Stripe secret key');
     }
 
+    console.log('Starting payment check process...');
+
     const stripe = new Stripe(stripeSecretKey, {
       apiVersion: '2023-10-16',
     });
 
-    console.log('Checking for paid Stripe sessions...');
+    console.log('Initialized Stripe client');
 
     // Ανάκτηση όλων των συνεδριών των τελευταίων 24 ωρών
     const yesterday = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
     
-    const sessions = await stripe.checkout.sessions.list({
-      limit: 100,
-      created: { gte: yesterday },
-      expand: ['data.payment_intent']
-    });
+    try {
+      const sessions = await stripe.checkout.sessions.list({
+        limit: 100,
+        created: { gte: yesterday },
+        expand: ['data.payment_intent']
+      });
 
-    console.log(`Found ${sessions.data.length} recent sessions`);
+      console.log(`Found ${sessions.data.length} total Stripe sessions`);
 
-    // Φιλτράρισμα για ολοκληρωμένες συνεδρίες
-    const completedSessions = sessions.data.filter(
-      session => session.status === 'complete' && session.client_reference_id
-    );
+      // Φιλτράρισμα για ολοκληρωμένες συνεδρίες
+      const completedSessions = sessions.data.filter(
+        session => session.status === 'complete' && session.client_reference_id
+      );
 
-    console.log(`Found ${completedSessions.length} completed sessions with reference IDs`);
+      console.log(`Found ${completedSessions.length} completed sessions with reference IDs`);
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing Supabase credentials');
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    let processedCount = 0;
-
-    // Πρώτα βρίσκουμε όλες τις εκκρεμείς αγγελίες
-    const { data: pendingJobs, error: pendingError } = await supabase
-      .from('jobs')
-      .select('*')
-      .eq('payment_status', 'pending')
-      .eq('is_active', false);
-
-    if (pendingError) {
-      console.error('Error fetching pending jobs:', pendingError);
-      throw pendingError;
-    }
-
-    console.log(`Found ${pendingJobs?.length || 0} pending jobs in database`);
-    
-    // Λίστα των IDs από τις πληρωμένες συνεδρίες
-    const paidJobIds = new Set<string>();
-    
-    // Συλλογή όλων των IDs από τις πληρωμένες συνεδρίες
-    for (const session of completedSessions) {
-      try {
-        if (!session.client_reference_id) continue;
-        const jobData = JSON.parse(decodeURIComponent(session.client_reference_id));
-        if (jobData.id) {
-          paidJobIds.add(jobData.id);
-          console.log(`Found paid job ID: ${jobData.id}`);
-        }
-      } catch (error) {
-        console.error('Error parsing session data:', error);
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      
+      if (!supabaseUrl || !supabaseServiceKey) {
+        throw new Error('Missing Supabase credentials');
       }
-    }
 
-    console.log(`Found ${paidJobIds.size} unique paid job IDs`);
+      console.log('Initializing Supabase client...');
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Ενημέρωση όλων των πληρωμένων αγγελιών
-    if (paidJobIds.size > 0) {
-      for (const jobId of paidJobIds) {
-        console.log(`Processing job ID: ${jobId}`);
-        
-        // Έλεγχος της τρέχουσας κατάστασης της αγγελίας
-        const { data: jobStatus, error: statusError } = await supabase
-          .from('jobs')
-          .select('payment_status, is_active')
-          .eq('id', jobId)
-          .single();
+      // Πρώτα βρίσκουμε όλες τις εκκρεμείς αγγελίες
+      console.log('Fetching pending jobs...');
+      const { data: pendingJobs, error: pendingError } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('payment_status', 'pending')
+        .eq('is_active', false);
 
-        if (statusError) {
-          console.error(`Error checking status for job ${jobId}:`, statusError);
-          continue;
-        }
+      if (pendingError) {
+        console.error('Error fetching pending jobs:', pendingError);
+        throw pendingError;
+      }
 
-        console.log(`Current job status:`, jobStatus);
-
-        // Ενημέρωση μόνο αν χρειάζεται
-        if (jobStatus.payment_status !== 'completed' || !jobStatus.is_active) {
-          const { error: updateError } = await supabase
-            .from('jobs')
-            .update({
-              payment_status: 'completed',
-              is_active: true
-            })
-            .eq('id', jobId);
-
-          if (updateError) {
-            console.error(`Error updating job ${jobId}:`, updateError);
-          } else {
-            console.log(`Successfully activated job ${jobId}`);
-            processedCount++;
+      console.log(`Found ${pendingJobs?.length || 0} pending jobs in database`);
+      
+      // Λίστα των IDs από τις πληρωμένες συνεδρίες
+      const paidJobIds = new Set<string>();
+      
+      // Συλλογή όλων των IDs από τις πληρωμένες συνεδρίες
+      console.log('Processing completed sessions...');
+      for (const session of completedSessions) {
+        try {
+          if (!session.client_reference_id) {
+            console.log('Session has no client reference ID:', session.id);
+            continue;
           }
-        } else {
-          console.log(`Job ${jobId} already activated`);
+          const jobData = JSON.parse(decodeURIComponent(session.client_reference_id));
+          if (jobData.id) {
+            paidJobIds.add(jobData.id);
+            console.log(`Found paid job ID: ${jobData.id} from session ${session.id}`);
+          }
+        } catch (error) {
+          console.error('Error parsing session data:', error);
+          console.error('Session:', session);
         }
       }
-    }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        totalSessions: sessions.data.length,
-        completedSessions: completedSessions.length,
-        uniquePaidJobs: paidJobIds.size,
-        processedJobs: processedCount
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
+      console.log(`Found ${paidJobIds.size} unique paid job IDs`);
+
+      // Ενημέρωση όλων των πληρωμένων αγγελιών
+      let processedCount = 0;
+      if (paidJobIds.size > 0) {
+        for (const jobId of paidJobIds) {
+          console.log(`Processing job ID: ${jobId}`);
+          
+          try {
+            // Έλεγχος της τρέχουσας κατάστασης της αγγελίας
+            const { data: jobStatus, error: statusError } = await supabase
+              .from('jobs')
+              .select('payment_status, is_active')
+              .eq('id', jobId)
+              .single();
+
+            if (statusError) {
+              console.error(`Error checking status for job ${jobId}:`, statusError);
+              continue;
+            }
+
+            console.log(`Current job status:`, jobStatus);
+
+            // Ενημέρωση μόνο αν χρειάζεται
+            if (jobStatus.payment_status !== 'completed' || !jobStatus.is_active) {
+              const { error: updateError } = await supabase
+                .from('jobs')
+                .update({
+                  payment_status: 'completed',
+                  is_active: true
+                })
+                .eq('id', jobId);
+
+              if (updateError) {
+                console.error(`Error updating job ${jobId}:`, updateError);
+              } else {
+                console.log(`Successfully activated job ${jobId}`);
+                processedCount++;
+              }
+            } else {
+              console.log(`Job ${jobId} already activated`);
+            }
+          } catch (error) {
+            console.error(`Error processing job ${jobId}:`, error);
+          }
+        }
       }
-    );
+
+      console.log('Payment check process completed successfully');
+      return new Response(
+        JSON.stringify({
+          success: true,
+          totalSessions: sessions.data.length,
+          completedSessions: completedSessions.length,
+          uniquePaidJobs: paidJobIds.size,
+          processedJobs: processedCount
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        }
+      );
+
+    } catch (stripeError) {
+      console.error('Stripe API error:', stripeError);
+      throw stripeError;
+    }
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in payment check process:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        errorType: error.constructor.name,
+        errorStack: error.stack
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: error.message.includes('authorization') ? 401 : 500
