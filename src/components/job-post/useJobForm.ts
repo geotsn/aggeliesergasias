@@ -82,20 +82,30 @@ export const useJobForm = () => {
 
     console.log("Created pending job:", jobData);
 
-    // Προσθήκη του ID της αγγελίας στα δεδομένα που στέλνουμε στο Stripe
-    const stripeData = {
+    if (!jobData?.id) {
+      throw new Error("Failed to create job listing");
+    }
+
+    // Δημιουργία του URL για το Stripe Checkout με το client_reference_id
+    const reference = {
       id: jobData.id,
       title: formData.title,
       company: formData.company
     };
     
-    const stripeSessionUrl = `https://buy.stripe.com/14k9BR50e3s54vK000?client_reference_id=${encodeURIComponent(JSON.stringify(stripeData))}`;
-    window.location.href = stripeSessionUrl;
+    const stripeCheckoutUrl = `https://buy.stripe.com/14k9BR50e3s54vK000?client_reference_id=${encodeURIComponent(JSON.stringify(reference))}`;
+    
+    // Αποθήκευση του ID της αγγελίας στο localStorage για μελλοντική αναφορά
+    localStorage.setItem('pendingJobId', jobData.id);
+    
+    // Ανακατεύθυνση στο Stripe Checkout
+    window.location.href = stripeCheckoutUrl;
   };
 
   const resetForm = () => {
     setFormData(initialFormData);
     setJobId(null);
+    localStorage.removeItem('pendingJobId');
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
