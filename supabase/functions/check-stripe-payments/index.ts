@@ -9,13 +9,24 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Verify authorization
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    const supabaseAnonKey = authHeader.replace('Bearer ', '');
+    if (!supabaseAnonKey) {
+      throw new Error('Invalid authorization header');
+    }
+
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
-    
     if (!stripeSecretKey) {
       throw new Error('Missing Stripe secret key');
     }
@@ -148,7 +159,7 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: error.message.includes('authorization') ? 401 : 500
       }
     );
   }
