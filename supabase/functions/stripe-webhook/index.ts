@@ -85,11 +85,11 @@ serve(async (req) => {
           throw new Error('Missing Supabase credentials');
         }
 
-        const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
         console.log('Updating job with ID:', jobData.id);
 
-        const { data, error } = await supabaseClient
+        const { data, error } = await supabase
           .from('jobs')
           .update({
             payment_status: 'completed',
