@@ -92,11 +92,35 @@ export const useJobForm = () => {
       company: formData.company
     };
 
-    const stripeCheckoutUrl = `https://buy.stripe.com/14k9BR50e3s54vK000`;
-    const urlWithReference = `${stripeCheckoutUrl}?client_reference_id=${encodeURIComponent(JSON.stringify(reference))}`;
-    
-    console.log("Redirecting to Stripe with reference:", reference);
-    window.location.href = urlWithReference;
+    try {
+      const response = await fetch(
+        `${window.location.origin}/functions/v1/create-checkout-session`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({ reference })
+        }
+      );
+
+      const { url, error } = await response.json();
+      
+      if (error) {
+        throw new Error(error);
+      }
+
+      if (!url) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      console.log("Redirecting to Stripe Checkout:", url);
+      window.location.href = url;
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      throw error;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
