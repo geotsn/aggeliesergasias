@@ -92,11 +92,11 @@ export const useJobForm = () => {
       company: formData.company
     };
 
-    // Δημιουργία του URL για το Stripe Checkout 
-    const stripeCheckoutUrl = `https://buy.stripe.com/14k9BR50e3s54vK000?client_reference_id=${encodeURIComponent(JSON.stringify(reference))}`;
+    const stripeCheckoutUrl = `https://buy.stripe.com/14k9BR50e3s54vK000`;
+    const urlWithReference = `${stripeCheckoutUrl}?client_reference_id=${encodeURIComponent(JSON.stringify(reference))}`;
     
-    // Ανακατεύθυνση στο Stripe Checkout
-    window.location.href = stripeCheckoutUrl;
+    console.log("Redirecting to Stripe with reference:", reference);
+    window.location.href = urlWithReference;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -117,7 +117,7 @@ export const useJobForm = () => {
       const postedAt = new Date();
       postedAt.setHours(postedAt.getHours() + 2);
 
-      const { data, error } = await supabase.from("jobs").insert([
+      const { error } = await supabase.from("jobs").insert([
         {
           ...formData,
           posted_at: postedAt.toISOString(),
@@ -127,7 +127,7 @@ export const useJobForm = () => {
           url: window.location.origin,
           payment_status: 'completed'
         }
-      ]).select();
+      ]);
 
       if (error) {
         console.error("Supabase error:", error);
