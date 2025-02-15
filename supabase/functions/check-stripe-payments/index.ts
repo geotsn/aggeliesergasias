@@ -9,13 +9,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authorization
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
       throw new Error('Missing authorization header');
@@ -39,7 +37,6 @@ serve(async (req) => {
 
     console.log('Initialized Stripe client');
 
-    // Ανάκτηση όλων των συνεδριών των τελευταίων 24 ωρών
     const yesterday = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
     
     try {
@@ -51,10 +48,13 @@ serve(async (req) => {
 
       console.log(`Found ${sessions.data.length} total Stripe sessions`);
 
-      // Φιλτράρισμα για ολοκληρωμένες συνεδρίες
-      const completedSessions = sessions.data.filter(
-        session => session.status === 'complete' && session.client_reference_id
-      );
+      // Φιλτράρισμα για ολοκληρωμένες συνεδρίες με πληρωμένο PaymentIntent
+      const completedSessions = sessions.data.filter(session => {
+        const paymentIntent = session.payment_intent as Stripe.PaymentIntent;
+        return session.status === 'complete' && 
+               session.client_reference_id && 
+               paymentIntent?.status === 'succeeded';
+      });
 
       console.log(`Found ${completedSessions.length} completed sessions with reference IDs`);
 
@@ -68,7 +68,6 @@ serve(async (req) => {
       console.log('Initializing Supabase client...');
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-      // Πρώτα βρίσκουμε όλες τις εκκρεμείς αγγελίες
       console.log('Fetching pending jobs...');
       const { data: pendingJobs, error: pendingError } = await supabase
         .from('jobs')
@@ -83,10 +82,8 @@ serve(async (req) => {
 
       console.log(`Found ${pendingJobs?.length || 0} pending jobs in database`);
       
-      // Λίστα των IDs από τις πληρωμένες συνεδρίες
       const paidJobIds = new Set<string>();
       
-      // Συλλογή όλων των IDs από τις πληρωμένες συνεδρίες
       console.log('Processing completed sessions...');
       for (const session of completedSessions) {
         try {
@@ -94,6 +91,13 @@ serve(async (req) => {
             console.log('Session has no client reference ID:', session.id);
             continue;
           }
+
+          const paymentIntent = session.payment_intent as Stripe.PaymentIntent;
+          if (paymentIntent?.status !== 'succeeded') {
+            console.log(`Session ${session.id} payment not succeeded: ${paymentIntent?.status}`);
+            continue;
+          }
+
           const jobData = JSON.parse(decodeURIComponent(session.client_reference_id));
           if (jobData.id) {
             paidJobIds.add(jobData.id);
@@ -107,14 +111,12 @@ serve(async (req) => {
 
       console.log(`Found ${paidJobIds.size} unique paid job IDs`);
 
-      // Ενημέρωση όλων των πληρωμένων αγγελιών
       let processedCount = 0;
       if (paidJobIds.size > 0) {
         for (const jobId of paidJobIds) {
           console.log(`Processing job ID: ${jobId}`);
           
           try {
-            // Έλεγχος της τρέχουσας κατάστασης της αγγελίας
             const { data: jobStatus, error: statusError } = await supabase
               .from('jobs')
               .select('payment_status, is_active')
@@ -128,7 +130,6 @@ serve(async (req) => {
 
             console.log(`Current job status:`, jobStatus);
 
-            // Ενημέρωση μόνο αν χρειάζεται
             if (jobStatus.payment_status !== 'completed' || !jobStatus.is_active) {
               const { error: updateError } = await supabase
                 .from('jobs')
